@@ -94,23 +94,25 @@ namespace Pretty {
     /// Pretty print the document to a string.
     /// Lines are terminated with the operating systems default line terminator.
     ///
-    pub def prettyPrint(width: Int32, doc: Doc) : String = 
+    pub def prettyPrint(width: Int32, doc: Doc) : String = prettyPrintHelper(width, doc) as & Pure
+
+    pub def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure = 
         let sb = StringBuilder.new();
         let simpleDoc = layout(width, doc);
-        prettyPrintHelper(sb, simpleDoc, identity);
+        prettyPrintWorker(sb, simpleDoc, identity);
         StringBuilder.toString(sb)
 
-    def prettyPrintHelper(sb: StringBuilder, sdoc: SimpleDoc, cont: Unit -> Unit) : Unit = 
+    def prettyPrintWorker(sb: StringBuilder, sdoc: SimpleDoc, cont: Unit -> Unit) : Unit & Impure = 
         match sdoc {
             case SEmpty => cont()
             case SText(t,rest) => { 
                 StringBuilder.appendString(sb, t);
-                prettyPrintHelper(sb, rest, cont)
+                prettyPrintWorker(sb, rest, cont)
             }
             case SLine(x,rest) => { 
                 StringBuilder.appendLineSeparator(sb);
                 StringBuilder.appendString(sb, x);
-                prettyPrintHelper(sb, rest, cont)
+                prettyPrintWorker(sb, rest, cont)
             }
         }
 
@@ -124,16 +126,16 @@ namespace Pretty {
     pub def empty(): Doc = Empty
 
     ///
-    /// `nest` renders the document `doc` with the current indentation level 
-    /// increased by `i`
-    ///
-    pub def nest(i: Int32, doc: Doc): Doc = Nest (i, doc)
-
-    ///
     /// Generate the document containing the literal string `s`.
     /// The input text should not contain newline characters.
     ///
     pub def text(s: String): Doc = Text(s)
+
+    ///
+    /// `nest` renders the document `doc` with the current indentation level 
+    /// increased by `i`
+    ///
+    pub def nest(i: Int32, doc: Doc): Doc = Nest (i, doc)
 
     ///
     /// Undocumented - used by `align`.
@@ -265,18 +267,21 @@ namespace Pretty {
     pub def encloseSep(left:Doc, right:Doc, sep: Doc, docs: List[Doc]): Doc = 
         encloseSepHelper(sep, docs, left, d -> d <> right)
 
+    ///
+    /// Helper function for `encloseSep`.
+    ///
     def encloseSepHelper(sep: Doc, docs: List[Doc], acc: Doc, cont: Doc -> Doc): Doc = 
-            match docs {
-                case Nil => cont(acc)
-                case x :: Nil => { 
-                    let acc1 = acc <!!> x;
-                    cont(acc1)
-                }
-                case x :: rs => {
-                    let acc1 = acc <!!> x <> sep;
-                    encloseSepHelper(sep, rs, acc1, cont)
-                }
+        match docs {
+            case Nil => cont(acc)
+            case x :: Nil => {
+                let acc1 = acc <!!> x;
+                cont(acc1)
             }
+            case x :: rs => {
+                let acc1 = acc <!!> x <> sep;
+                encloseSepHelper(sep, rs, acc1, cont)
+            }
+        }
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...)
@@ -454,7 +459,7 @@ namespace Pretty {
     ///
     /// Generate a document of n spaces
     ///
-    pub def spaces(n:int): Doc = repeatString(" ", n)
+    pub def spaces(n: Int32): Doc = repeatString(" ", n)
 
     ///
     /// Enclose the document body between `l` (left) and `r` (right).
