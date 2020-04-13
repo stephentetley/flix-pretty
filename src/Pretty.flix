@@ -102,17 +102,17 @@ namespace Pretty {
         prettyPrintWorker(sb, simpleDoc, identity);
         StringBuilder.toString(sb)
 
-    def prettyPrintWorker(sb: StringBuilder, sdoc: SimpleDoc, cont: Unit -> Unit) : Unit & Impure = 
+    def prettyPrintWorker(sb: StringBuilder, sdoc: SimpleDoc, k: Unit -> Unit) : Unit & Impure = 
         match sdoc {
-            case SEmpty => cont()
+            case SEmpty => k()
             case SText(t,rest) => { 
-                StringBuilder.appendString(sb, t);
-                prettyPrintWorker(sb, rest, cont)
+                StringBuilder.appendString!(sb, t);
+                prettyPrintWorker(sb, rest, k)
             }
             case SLine(x,rest) => { 
-                StringBuilder.appendLineSeparator(sb);
-                StringBuilder.appendString(sb, x);
-                prettyPrintWorker(sb, rest, cont)
+                StringBuilder.appendLineSeparator!(sb);
+                StringBuilder.appendString!(sb, x);
+                prettyPrintWorker(sb, rest, k)
             }
         }
 
