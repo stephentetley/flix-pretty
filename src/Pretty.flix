@@ -96,7 +96,7 @@ namespace Pretty {
     ///
     pub def prettyPrint(width: Int32, doc: Doc) : String = prettyPrintHelper(width, doc) as & Pure
 
-    pub def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure = 
+    def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure = 
         let sb = StringBuilder.new();
         let simpleDoc = layout(width, doc);
         prettyPrintWorker(sb, simpleDoc, identity);
@@ -115,6 +115,11 @@ namespace Pretty {
                 prettyPrintWorker(sb, rest, k)
             }
         }
+
+    ///
+    /// Pretty print with a width of 80.
+    ///
+    pub def toString(doc: Doc): String = prettyPrint(80, doc)
 
 
     // ************************************************************************
@@ -257,9 +262,15 @@ namespace Pretty {
             case x :: rs => foldDocsHelper(op, op(acc,x), rs, cont)
         }
 
-    pub def punctuate(sep: Doc, docs:List[Doc]): Doc =
-        foldDocs((l,r) -> l <> sep <> r, docs)
+    pub def punctuate(sep: Doc, docs:List[Doc]): List[Doc] = punctuateHelper(sep, docs, xs -> xs)
     
+
+    pub def punctuateHelper(sep: Doc, ds:List[Doc], k: List[Doc] -> List[Doc]): List[Doc] = match ds {
+        case Nil => k(Nil)
+        case d :: Nil => k(d :: Nil)
+        case d :: rs    => punctuateHelper(sep, rs, xs -> k((d <> sep) :: xs))
+    }
+
     ///
     /// Punctuate the list of documents with the separator `sep` and bookend them 
     /// with `left` and `right`.

@@ -22,26 +22,51 @@ namespace TestPretty {
 
 @test
 def empty01(): Bool = 
-    Pretty.prettyPrint(1000, Pretty.empty()) == ""
+    Pretty.toString(Pretty.empty()) == ""
 
 /////////////////////////////////////////////////////////////////////////////
-// text                                                                   //
+// text                                                                    //
 /////////////////////////////////////////////////////////////////////////////
 
 @test
 def text01(): Bool =
-    Pretty.prettyPrint(1000, Pretty.text("")) == ""
+    Pretty.toString(Pretty.text("")) == ""
 
 @test
 def text02(): Bool =
-    Pretty.prettyPrint(1000, Pretty.text("A")) == "A"
+    Pretty.toString(Pretty.text("A")) == "A"
 
 @test
 def text03(): Bool =
-    Pretty.prettyPrint(1000, Pretty.text("AB")) == "AB"
+    Pretty.toString(Pretty.text("AB")) == "AB"
 
 @test
 def text04(): Bool =
-    Pretty.prettyPrint(1000, Pretty.text("A B")) == "A B"
+    Pretty.toString(Pretty.text("A B")) == "A B"
+
+/////////////////////////////////////////////////////////////////////////////
+// Punctuate                                                               //
+/////////////////////////////////////////////////////////////////////////////
+
+@test
+pub def punctuate01(): Bool =
+    let ds = Pretty.punctuate(Pretty.comma(), Nil);
+    List.map(Pretty.toString, ds) == Nil
+
+@test
+pub def punctuate02(): Bool =
+    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Nil);
+    List.map(Pretty.toString, ds) == "abc" :: Nil
+
+@test
+pub def punctuate03(): Bool =
+    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Pretty.text("def") :: Nil);
+    List.map(Pretty.toString, ds) == "abc," :: "def" :: Nil
+
+@test
+pub def punctuate04(): Bool =
+    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Pretty.text("def") :: Pretty.text("ghi") :: Nil);
+    List.map(Pretty.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
+
 
 }
