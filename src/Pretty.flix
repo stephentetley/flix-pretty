@@ -213,7 +213,7 @@ namespace Pretty {
     ///
     /// Concatenate two documents horizontally with a separating space.
     /// 
-    pub def <+>(x: Doc, y:Doc): Doc = besideSpace(x,y)
+    pub def <<>>(x: Doc, y:Doc): Doc = besideSpace(x,y)
 
     ///
     /// Concatenate two documents with a soft line.
