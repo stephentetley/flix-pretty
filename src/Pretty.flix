@@ -132,7 +132,7 @@ namespace Pretty {
 
     ///
     /// Generate the document containing the literal string `s`.
-    /// The input text should not contain newline characters.
+    /// The input text should not contain newline chars.
     ///
     pub def text(s: String): Doc = Text(s)
 
@@ -176,7 +176,7 @@ namespace Pretty {
     ///
     /// This is 'char' in PPrint (Haskell).
     ///
-    pub def character(ch: Char): Doc = 
+    pub def char(ch: Char): Doc = 
         match ch {
             case '\n' => line()
             case '\r' => line()
@@ -208,7 +208,7 @@ namespace Pretty {
     ///
     /// Concatenate two documents horizontally with a separating space.
     ///
-    pub def besideSpace(x: Doc, y: Doc): Doc = x <> character(' ') <> y
+    pub def besideSpace(x: Doc, y: Doc): Doc = x <> char(' ') <> y
 
     ///
     /// Concatenate two documents horizontally with a separating space.
@@ -385,87 +385,87 @@ namespace Pretty {
     ///
     /// Single left parenthesis: '('
     ///
-    pub def lparen() : Doc = character('(')
+    pub def lparen() : Doc = char('(')
 
     ///
     /// Single right parenthesis: ')'
     ///
-    pub def rparen() : Doc = character(')')
+    pub def rparen() : Doc = char(')')
 
     ///
     /// Single left angle: '<'
     ///
-    pub def langle() : Doc = character('<')
+    pub def langle() : Doc = char('<')
 
     ///
     /// Single right angle: '>'
     ///
-    pub def rangle() : Doc = character('>')
+    pub def rangle() : Doc = char('>')
 
     ///
     /// Single left brace: '{'
     ///
-    pub def lbrace(): Doc = character('{')
+    pub def lbrace(): Doc = char('{')
     
     ///
     /// Single right brace: '}'
     ///
-    pub def rbrace(): Doc= character('}')
+    pub def rbrace(): Doc= char('}')
     
     ///
     /// Single left square bracket: '['
     ///
-    pub def lbracket(): Doc = character('[')
+    pub def lbracket(): Doc = char('[')
     
     ///
     /// Single right square bracket: ']'
     ///
-    pub def rbracket(): Doc = character(']')
+    pub def rbracket(): Doc = char(']')
 
     ///
     /// Single quote
     ///
-    pub def squote(): Doc= character('\'')
+    pub def squote(): Doc= char('\'')
 
     ///
     /// The document @dquote@ contains a double quote
     ///
-    pub def dquote(): Doc = character('"')
+    pub def dquote(): Doc = char('"')
 
     ///
     /// The document @semi@ contains a semi colon
     ///
-    pub def semi(): Doc = character(';')
+    pub def semi(): Doc = char(';')
 
     ///
     /// The document @colon@ contains a colon
     ///
-    pub def colon(): Doc = character(':')
+    pub def colon(): Doc = char(':')
 
     ///
     /// The document @comma@ contains a comma
     ///
-    pub def comma() : Doc = character(',')
+    pub def comma() : Doc = char(',')
 
     ///
     /// The document @space@ contains a single space
     ///
-    pub def space() : Doc = character(' ')
+    pub def space() : Doc = char(' ')
 
     ///
     /// The document @dot@ contains a single dot
     ///
-    pub def dot(): Doc = character('.')
+    pub def dot(): Doc = char('.')
 
     ///
     /// The document @backslash@ contains a back slash
     ///
-    pub def backslash(): Doc = character('\\')
+    pub def backslash(): Doc = char('\\')
 
     ///
     /// The document @equals@ contains an equal sign
     ///
-    pub def equals(): Doc = character('=')
+    pub def equals(): Doc = char('=')
 
     ///
     /// Generate a document of n spaces
