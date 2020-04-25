@@ -230,13 +230,26 @@ namespace Text/PrettyPrint {
     /// Concatenate two documents with a soft line.
     /// This is (</>) in PPrint (Haskell).
     ///
-    pub def <!>(x: Doc, y: Doc): Doc = x <> softline() <> y
-    
+    pub def besideSoftline(x: Doc, y: Doc): Doc = x <> softline() <> y
+
+    ///
+    /// Concatenate two documents with a soft line.
+    /// This is (</>) in PPrint (Haskell).
+    ///
+    pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)
+
+
     ///
     /// Concatenate two documents with a soft break.
     /// This is (<//>) in PPrint (Haskell).
     ///
-    pub def <!!>(x: Doc, y: Doc): Doc = x <> softbreak() <> y
+    pub def besideSoftbreak(x: Doc, y: Doc): Doc = x <> softbreak() <> y
+
+    ///
+    /// Concatenate two documents with a soft break.
+    /// This is (<//>) in PPrint (Haskell).
+    ///
+    pub def <!!>(x: Doc, y: Doc): Doc = besideSoftbreak(x, y)
 
     ///
     /// Concatenate two documents separating with `line`.
@@ -313,9 +326,7 @@ namespace Text/PrettyPrint {
     ///
     /// Separate documents horizontally with a space.
     ///
-    /// Note - seems to be a problem using (<+>)...
-    ///
-    pub def hsep(docs: List[Doc]): Doc = foldDocs((x,y) -> besideSpace(x,y), docs)
+    pub def hsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <<>> y, docs)
 
     ///
     /// Separate documents vertically with (<&>)
@@ -331,6 +342,17 @@ namespace Text/PrettyPrint {
     /// Separate documents with (<&&>)
     ///
     pub def vcat(docs: List[Doc]): Doc = foldDocs((x,y) -> x <&&> y, docs)
+
+    ///
+    /// Horizontally until it doesn't fit...
+    ///
+    pub def fillCat(docs: List[Doc]): Doc = List.foldRight((x,y) -> x <!!> y, empty(), docs)
+
+
+    ///
+    /// Concat horizontally or vertically...
+    ///
+    pub def cat(docs: List[Doc]): Doc = group(vcat(docs))
 
     ///
     /// `(align d)` renders the document `d` with the nesting level set to 
