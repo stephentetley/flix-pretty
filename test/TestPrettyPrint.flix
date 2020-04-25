@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-namespace TestPretty {
+use Text/PrettyPrint.{toString};
+
+namespace TestPrettyPrint {
 
 /////////////////////////////////////////////////////////////////////////////
 // empty                                                                   //
@@ -22,7 +24,8 @@ namespace TestPretty {
 
 @test
 def empty01(): Bool = 
-    Pretty.toString(Pretty.empty()) == ""
+    use Text/PrettyPrint.{empty};
+    toString(empty()) == ""
 
 /////////////////////////////////////////////////////////////////////////////
 // text                                                                    //
@@ -30,19 +33,23 @@ def empty01(): Bool =
 
 @test
 def text01(): Bool =
-    Pretty.toString(Pretty.text("")) == ""
+    use Text/PrettyPrint.{text};
+    toString(text("")) == ""
 
 @test
 def text02(): Bool =
-    Pretty.toString(Pretty.text("A")) == "A"
+    use Text/PrettyPrint.{text};
+    toString(text("A")) == "A"
 
 @test
 def text03(): Bool =
-    Pretty.toString(Pretty.text("AB")) == "AB"
+    use Text/PrettyPrint.{text};
+    toString(text("AB")) == "AB"
 
 @test
 def text04(): Bool =
-    Pretty.toString(Pretty.text("A B")) == "A B"
+    use Text/PrettyPrint.{text};
+    toString(text("A B")) == "A B"
 
 /////////////////////////////////////////////////////////////////////////////
 // Punctuate                                                               //
@@ -50,23 +57,27 @@ def text04(): Bool =
 
 @test
 pub def punctuate01(): Bool =
-    let ds = Pretty.punctuate(Pretty.comma(), Nil);
-    List.map(Pretty.toString, ds) == Nil
+    use Text/PrettyPrint.{punctuate, comma};
+    let ds = punctuate(comma(), Nil);
+    List.map(toString, ds) == Nil
 
 @test
 pub def punctuate02(): Bool =
-    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Nil);
-    List.map(Pretty.toString, ds) == "abc" :: Nil
+    use Text/PrettyPrint.{punctuate, comma, text};
+    let ds = punctuate(comma(), text("abc") :: Nil);
+    List.map(toString, ds) == "abc" :: Nil
 
 @test
 pub def punctuate03(): Bool =
-    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Pretty.text("def") :: Nil);
-    List.map(Pretty.toString, ds) == "abc," :: "def" :: Nil
+    use Text/PrettyPrint.{punctuate, comma, text};
+    let ds = punctuate(comma(), text("abc") :: text("def") :: Nil);
+    List.map(toString, ds) == "abc," :: "def" :: Nil
 
 @test
 pub def punctuate04(): Bool =
-    let ds = Pretty.punctuate(Pretty.comma(), Pretty.text("abc") :: Pretty.text("def") :: Pretty.text("ghi") :: Nil);
-    List.map(Pretty.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
+    use Text/PrettyPrint.{punctuate, comma, text};
+    let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
+    List.map(toString, ds) == "abc," :: "def," :: "ghi" :: Nil
 
 
 }

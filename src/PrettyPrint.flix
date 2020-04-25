@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Pretty {
+namespace Text/PrettyPrint {
 
     pub enum Doc {
         case Empty,
@@ -91,17 +91,22 @@ namespace Pretty {
 
 
     ///
-    /// Pretty print the document to a string.
-    /// Lines are terminated with the operating systems default line terminator.
+    /// Returns `doc` pretty printed with a line width of `width`.
     ///
     pub def prettyPrint(width: Int32, doc: Doc) : String = prettyPrintHelper(width, doc) as & Pure
 
-    def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure = 
+    ///
+    /// Helper function for `prettyPrint`.
+    ///
+    def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure =
         let sb = StringBuilder.new();
         let simpleDoc = layout(width, doc);
         prettyPrintWorker(sb, simpleDoc, identity);
         StringBuilder.toString(sb)
 
+    ///
+    /// Helper function for `prettyPrint`.
+    ///
     def prettyPrintWorker(sb: StringBuilder, sdoc: SimpleDoc, k: Unit -> Unit) : Unit & Impure = 
         match sdoc {
             case SEmpty => k()
@@ -117,24 +122,30 @@ namespace Pretty {
         }
 
     ///
-    /// Pretty print with a width of 80.
+    /// Returns `doc` pretty printed with a width of 80.
     ///
     pub def toString(doc: Doc): String = prettyPrint(80, doc)
 
 
-    // ************************************************************************
-    // Primitive printers 
-    
     ///
-    /// The empty document
+    /// # Primitive printers
+    ///
+
+    ///
+    /// Returns the empty document.
     ///
     pub def empty(): Doc = Empty
 
     ///
-    /// Generate the document containing the literal string `s`.
-    /// The input text should not contain newline chars.
+    /// Returns the document containing the literal string `s`.
     ///
-    pub def text(s: String): Doc = Text(s)
+    /// If the input text contains newlines it will be assembled as a list of lines.
+    ///
+    pub def text(s: String): Doc = match String.lines(s) {
+        case Nil => Text("")
+        case x :: Nil => Text(x)
+        case xs => vcat(List.map(Text, xs))
+    }
 
     ///
     /// `nest` renders the document `doc` with the current indentation level 
