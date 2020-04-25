@@ -1,11 +1,14 @@
 
-def node(name: String, kids: Array[Pretty.Doc]): Pretty.Doc = 
+use Text/PrettyPrint.{Doc};
+use Text/PrettyPrint.{brackets, text, hang, prettyPrint, vlinebreak, vcat};
+
+def node(name: String, kids: Array[Doc]): Doc & Impure = 
     match Array.toList(kids) {
-        case Nil => Pretty.brackets(Pretty.text(name))
-        case ks => Pretty.hang(4, Pretty.brackets(Pretty.vlinebreak(Pretty.text(name), Pretty.vcat(ks))))
+        case Nil => brackets(text(name))
+        case ks => hang(4, brackets(vlinebreak(text(name), vcat(ks))))
     }
 
-def tree1(): Pretty.Doc = 
+def tree1(): Doc & Impure = 
     node("factx-fsharp",
         [ node("src",
             [ node("bin", [])
@@ -24,5 +27,5 @@ def tree1(): Pretty.Doc =
         ])
 
 @test
-def demo01(): String = 
-    Pretty.prettyPrint(99, tree1())
+def test01(): String & Impure = 
+    prettyPrint(99, tree1())
