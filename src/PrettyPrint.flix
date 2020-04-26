@@ -100,24 +100,31 @@ namespace Text/PrettyPrint {
     ///
     def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure =
         let sb = StringBuilder.new();
-        let simpleDoc = layout(width, doc);
-        prettyPrintWorker(sb, simpleDoc, identity);
+        prettyPrint!(sb, width, doc);
         StringBuilder.toString(sb)
 
     ///
-    /// Helper function for `prettyPrint`.
+    /// Appends StringBuilder `sb` with `doc` pretty printed with a line width of `width`.
     ///
-    def prettyPrintWorker(sb: StringBuilder, sdoc: SimpleDoc, k: Unit -> Unit) : Unit & Impure = 
+    pub def prettyPrint!(sb: StringBuilder, width: Int32, doc: Doc): Unit & Impure =
+        let simpleDoc = layout(width, doc);
+        renderSimpleDoc!(sb, simpleDoc)
+
+
+    ///
+    /// Renders a SimpleDoc.
+    ///
+    def renderSimpleDoc!(sb: StringBuilder, sdoc: SimpleDoc) : Unit & Impure =
         match sdoc {
-            case SEmpty => k()
+            case SEmpty => ()
             case SText(t,rest) => { 
                 StringBuilder.appendString!(sb, t);
-                prettyPrintWorker(sb, rest, k)
+                renderSimpleDoc!(sb, rest)
             }
             case SLine(x,rest) => { 
                 StringBuilder.appendLineSeparator!(sb);
                 StringBuilder.appendString!(sb, x);
-                prettyPrintWorker(sb, rest, k)
+                renderSimpleDoc!(sb, rest)
             }
         }
 
