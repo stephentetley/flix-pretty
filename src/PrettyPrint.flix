@@ -113,7 +113,7 @@ namespace Text/PrettyPrint {
     ///
     /// Appends StringBuilder `sb` with `doc` pretty printed with a line width of `width`.
     ///
-    pub def writePretty!(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure = 
+    pub def writePretty!(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, System.Error] & Impure = 
         use Result.flatMap;
         let str = prettyPrint(width, doc);
         let path1 = System/FilePath.new(path);
