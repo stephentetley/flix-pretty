@@ -74,7 +74,7 @@ namespace Text/PrettyPrint {
                 let fk1 = _ -> layoutBest(width, col, (iz, x) :: rs, alternate, sk, fk);
                 layoutBest(width, col, (iz, flatten(col,x)) :: rs, true, sk, fk1)
             case (_, Text(t)) :: rs =>
-                if ((width >= 0) && alternate && isTooBig(t,col,width))
+                if ((width >= 0) and alternate and isTooBig(t,col,width))
                     fk()
                 else {
                     let sk1 = v1 -> sk(SText(t, v1));
