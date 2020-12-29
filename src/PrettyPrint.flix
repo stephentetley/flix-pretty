@@ -33,6 +33,15 @@ namespace Text/PrettyPrint {
         case SLine(String, SimpleDoc)
     }
 
+    ///
+    /// A type class for Pretty printing with precedence levels
+    ///
+    pub class Pretty[a] {
+        pub def pretty(x: a): Doc
+    }
+
+    /// pub def toDoc[a: Pretty](x: a): Doc = Text/PrettyPrint/PrettyPrec.prettyPrec(x)
+
     def extend(s: String, n: Int32): String = 
         s + String.repeat(" ", n)
 
@@ -541,7 +550,7 @@ namespace Text/PrettyPrint {
     pub def braces(x: Doc): Doc = enclose(lbrace(), rbrace(), x)
     
     ///
-    /// Enclose in square brackets (...)
+    /// Enclose in parentheses (...)
     ///
     pub def parens(x: Doc): Doc = enclose(lparen(), rparen(), x)
     
@@ -555,5 +564,11 @@ namespace Text/PrettyPrint {
     ///
     pub def brackets (x: Doc): Doc = enclose(lbracket(), rbracket(), x)
     
-    
+
+    ///
+    /// Enclose in parentheses if `b` is true.
+    ///
+    pub def maybeParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
+
+
  }
