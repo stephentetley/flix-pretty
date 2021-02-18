@@ -36,7 +36,7 @@ namespace Text/PrettyPrint {
     ///
     /// A type class for Pretty printing with precedence levels
     ///
-    pub class Pretty[a] {
+    pub lawless class Pretty[a] {
         pub def pretty(x: a): Doc
     }
 
