@@ -311,13 +311,15 @@ namespace Text/PrettyPrint {
         }
 
     pub def punctuate(sep: Doc, docs:List[Doc]): List[Doc] = punctuateHelper(sep, docs, xs -> xs)
-    
+
 
     pub def punctuateHelper(sep: Doc, ds:List[Doc], k: List[Doc] -> List[Doc]): List[Doc] = match ds {
         case Nil => k(Nil)
         case d :: Nil => k(d :: Nil)
         case d :: rs    => punctuateHelper(sep, rs, xs -> k((d <> sep) :: xs))
     }
+
+    pub def intersperse(sep: Doc, docs:List[Doc]): Doc = cat(punctuate(sep, docs))
 
     ///
     /// Punctuate the list of documents with the separator `sep` and bookend them 
