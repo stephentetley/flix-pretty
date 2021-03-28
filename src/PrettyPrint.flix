@@ -27,6 +27,10 @@ namespace Text/PrettyPrint {
         case Nesting(Int32 -> Doc)
     }
 
+    instance ToString[Doc] {
+        pub def toString(x: Doc): String = prettyPrint(80, x)
+    }
+
     enum SimpleDoc {
         case SEmpty,
         case SText(String, SimpleDoc),
@@ -34,7 +38,7 @@ namespace Text/PrettyPrint {
     }
 
     ///
-    /// A type class for Pretty printing with precedence levels
+    /// A type class for Pretty printing, printing with precedence levels to be added...
     ///
     pub lawless class Pretty[a] {
         pub def pretty(x: a): Doc
@@ -122,7 +126,7 @@ namespace Text/PrettyPrint {
     ///
     /// Appends StringBuilder `sb` with `doc` pretty printed with a line width of `width`.
     ///
-    pub def writePretty!(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, System.Error] & Impure = 
+    pub def writePretty(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
         let str = prettyPrint(width, doc);
         let path1 = System/FilePath.new(path);
@@ -145,10 +149,6 @@ namespace Text/PrettyPrint {
             }
         }
 
-    ///
-    /// Returns `doc` pretty printed with a width of 80.
-    ///
-    pub def toString(doc: Doc): String = prettyPrint(80, doc)
 
 
     ///
