@@ -350,6 +350,26 @@ namespace Text/PrettyPrint {
     pub def tupled(docs: List[Doc]) : Doc = encloseSep(lparen(), rparen(), comma(), docs)
 
     ///
+    /// Enclose in parens and separate with comma [a,b,c,...]
+    ///
+    pub def commaBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with comma {a,b,c,...}
+    ///
+    pub def commaBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi [a;b;c,...]
+    ///
+    pub def semiBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), semi(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi {a;b;c,...}
+    ///
+    pub def semiBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), semi(), docs)
+
+    ///
     /// Separate documents horizontally with a space.
     ///
     pub def hsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <<>> y, docs)
