@@ -81,9 +81,14 @@ namespace Text/PPrint {
         spaces(n) <> x
     
 
-    pub def render(pageWidth: Int32, d: Doc): Option[String] = 
-        toADoc(pageWidth, d)
-            |> Text/PPrint/Internal/ADoc.render
+    pub def render(pageWidth: Int32, d: Doc): Option[String] & Impure = 
+        use Option.flatMap;
+        let _ = Console.printLine("render.001");
+        let adoc = toADoc(pageWidth, d);
+        let _ = Console.printLine("render.002");
+        let* ans = Text/PPrint/Internal/ADoc.render(adoc);
+        let _ = Console.printLine("render.002");
+        Some(ans)
 
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.

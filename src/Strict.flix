@@ -79,25 +79,48 @@ namespace Text/PrettyPrint/Strict {
             case (i, _, Group(x)) :: rs     => fits(width, (i, Flat1, x) :: rs)
         }
 
-    def format (width: Int32, col: Int32, xs: List[Format1]): SDoc =
+    /// Needs CPS transformation...
+    def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc =
         match xs {
-            case  Nil => SEmpty
-            case (_ ,_ , Empty) :: rs           => format(width, col, rs)
-            case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs)
-            case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs)
-            case (_, _, Text(s)) :: rs          => {let d1 = format(width, col + String.length(s), rs); SText(s, d1)}
-            case (_, _, Char(c)) :: rs          => {let d1 = format(width, col + 1, rs); SText(ToString.toString(c), d1)}
-            case (_, Flat1, Break(s)) :: rs     => {let d1 = format(width, col + String.length(s), rs); SText(s, d1)}
-            case (i, Break1, Break(_)) :: rs    => {let d1 = format(width, i, rs); SLine(i, d1)}
+            case  Nil => cont(SEmpty)
+            case (_ ,_ , Empty) :: rs           => format(width, col, rs, cont)
+            case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
+            case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs, cont)
+            case (_, _, Text(s)) :: rs          => 
+                format(width, col + String.length(s), rs, v1 -> 
+                    cont(SText(s, v1)))
+
+            case (_, _, Char(c)) :: rs          => 
+                format(width, col + 1, rs, v1 -> 
+                    cont(SText(ToString.toString(c), v1)))
+
+            case (_, Flat1, Break(s)) :: rs     => 
+                format(width, col + String.length(s), rs, v1 -> 
+                    cont(SText(s, v1)))
+
+            case (i, Break1, Break(_)) :: rs    => 
+                format(width, i, rs, v1 -> 
+                    cont(SLine(i, v1)))
+                    
             case (i, _, Group(x)) :: rs         =>
                 if (fits(width - col, (i, Flat1, x) :: rs))
-                    format(width, col, (i, Flat1, x) :: rs)
+                    format(width, col, (i, Flat1, x) :: rs, cont)
                 else
-                    format(width, col, (i, Break1, x) :: rs)
+                    format(width, col, (i, Break1, x) :: rs, cont)
         }
 
     pub def render(lineWidth: Int32, doc: Doc): String =
-        format(lineWidth, 1, (1, Flat1, doc) :: Nil) |> sdocToString
+        format(lineWidth, 1, (1, Flat1, doc) :: Nil, d1 -> d1) |> sdocToString
+
+    ///
+    /// Render `doc` to a file, pretty printed with a line width of `width`.
+    ///
+    pub def writePretty(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
+        use Result.flatMap;
+        let str = render(width, doc);
+        let path1 = System/FilePath.new(path);
+        System/File.writeFile(path1, cs, str)
+
 
     ///
     /// # Primitive printers
@@ -128,11 +151,18 @@ namespace Text/PrettyPrint/Strict {
             case '\r' => breakWith(String.lineSeparator())
             case _ => Char.toString(ch) |> text
         }
+
     ///
     /// `nest` renders the document `doc` with the current indentation level 
     /// increased by `i`
     ///
     pub def nest(i: Int32, doc: Doc): Doc = Nest(i, doc)
+
+    ///
+    /// `nest` renders the document `doc` with the current indentation level 
+    /// increased by `i`
+    ///
+    pub def hang(i: Int32, doc: Doc): Doc = nest(i, doc)
 
     ///
     /// `break`
@@ -190,7 +220,14 @@ namespace Text/PrettyPrint/Strict {
     /// Concatenate two documents separating with `linebreak`.
     /// This is (<$$>) in PPrint (Haskell).
     ///
-    pub def <&>(x: Doc, y: Doc): Doc = x <> breakWith(String.lineSeparator()) <> y
+    pub def <&>(x: Doc, y: Doc): Doc = match (x, y) { 
+        case (Empty, _) => y
+        case (_, Empty) => x
+        case (_, _) => x <> breakWith(String.lineSeparator()) <> y
+    }
+
+
+    pub def <&&>(x: Doc, y: Doc): Doc = x <> breakWith(String.lineSeparator()) <> y
 
     // ************************************************************************
     // List concatenation 
@@ -216,7 +253,9 @@ namespace Text/PrettyPrint/Strict {
         case d :: rs    => punctuateHelper(sep, rs, xs -> k((d <> sep) :: xs))
     }
 
-    pub def intersperse(sep: Doc, docs:List[Doc]): Doc = cat(punctuate(sep, docs))
+    pub def sep(docs: List[Doc]): Doc = foldDocs(x -> y -> x <!> y, docs)
+
+    pub def intersperse(sepa: Doc, docs:List[Doc]): Doc = sep(punctuate(sepa, docs))
 
     ///
     /// Punctuate the list of documents with the separator `sep` and bookend them 
