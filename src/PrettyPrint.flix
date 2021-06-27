@@ -124,7 +124,7 @@ namespace Text/PrettyPrint {
         renderSimpleDoc!(sb, simpleDoc)
 
     ///
-    /// Appends StringBuilder `sb` with `doc` pretty printed with a line width of `width`.
+    /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
     pub def writePretty(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
