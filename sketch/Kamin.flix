@@ -24,14 +24,18 @@ namespace Text/PrettyPrint/Kamin {
         case DocEmpty
         case Text(String)
         case Line
+        case Nest(Int32, Doc)
         case Cat(Doc, Doc)
         case Alt(Doc, Doc)
+        case Tab(Doc)
     }
 
     pub def empty(): Doc = DocEmpty
     pub def text(x: String): Doc = Text(x)
     pub def space(): Doc = Text(" ")
     pub def line(): Doc = Line
+    pub def nest(n: Int32, d: Doc): Doc = Nest(n, d)
+    pub def tab(d: Doc): Doc = Tab(d)
 
     pub def <>(x: Doc, y: Doc): Doc = Cat(x, y)
 
@@ -41,6 +45,7 @@ namespace Text/PrettyPrint/Kamin {
 
     type alias PPState = (Int32, Int32, Int32, Int32)
 
+    /// min-width w/newline * min width wo/newline * st -> (last column * text)
     type alias Doc1 = (Int32, Int32, PPState -> (Int32, String))
         
 
@@ -54,6 +59,13 @@ namespace Text/PrettyPrint/Kamin {
             (sz, infinity(), st -> {let (_, cc, _, _): PPState = st; (cc + sz, s)})
         }
         case Line => (0, 0, st -> {let (ci, _, _, _): PPState = st; (ci, String.lineSeparator() + String.repeat(" ", ci))})
+        case Nest(n, d) => {
+            let (mwo1, mw1, fn1) = render1(d);
+            (mwo1, mw1, st -> {
+                let (ci, cc, pw, epw): PPState = st;
+                fn1((ci + n, cc, pw, epw))
+            })
+        }
         case Cat(d1, d2) => {
             let (mwo1, mw1, fn1) = render1(d1);
             let (mwo2, mw2, fn2) = render1(d2);
@@ -75,6 +87,13 @@ namespace Text/PrettyPrint/Kamin {
                     fn1(st)
                 else 
                     fn2(st)
+            })
+        }
+        case Tab(d) => {
+            let (mwo1, mw1, fn1) = render1(d);
+            (mwo1, mw1, st -> {
+                let (_, cc, pw, epw): PPState = st;
+                fn1((cc, cc, pw, epw)) 
             })
         }
     }

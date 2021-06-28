@@ -1,4 +1,4 @@
-use Text/PrettyPrint/Kamin.{pretty, text, line};
+use Text/PrettyPrint/Kamin.{pretty, text, line, tab};
 use Text/PrettyPrint/Kamin.{<>, <<>>, <!>};
 
 def main(_args: Array[String]): Int32 & Impure = 
@@ -8,6 +8,7 @@ def main(_args: Array[String]): Int32 & Impure =
     test03();
     test04();
     test05();
+    test06();
     0
 
 def test01(): Unit & Impure = 
@@ -34,3 +35,6 @@ def test05(): Unit & Impure =
     let doc = doc1 <!> doc2;
     pretty(16, doc) |> println    
 
+def test06(): Unit & Impure = 
+    let doc = text("hello") <<>> tab(text("world") <> line() <> text("!"));
+    pretty(80, doc) |> println 
