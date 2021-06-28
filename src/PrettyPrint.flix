@@ -17,13 +17,13 @@
 namespace Text/PrettyPrint {
 
     pub enum Doc {
-        case Empty,
-        case Text(String),
-        case Line(Bool),
-        case Cat(Doc,Doc),
-        case Nest(Int32,Doc),
-        case Group(Doc),
-        case Column(Int32 -> Doc),
+        case Empty
+        case Text(String)
+        case Line(Bool)
+        case Cat(Doc,Doc)
+        case Nest(Int32,Doc)
+        case Group(Doc)
+        case Column(Int32 -> Doc)
         case Nesting(Int32 -> Doc)
     }
 
@@ -32,8 +32,8 @@ namespace Text/PrettyPrint {
     }
 
     enum SimpleDoc {
-        case SEmpty,
-        case SText(String, SimpleDoc),
+        case SEmpty
+        case SText(String, SimpleDoc)
         case SLine(String, SimpleDoc)
     }
 
