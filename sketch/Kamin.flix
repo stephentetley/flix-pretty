@@ -51,6 +51,7 @@ namespace Text/PrettyPrint/Kamin {
 
     def infinity(): Int32 = 99_999_999
 
+    /// TODO CPS and StringBuilder 
 
     pub def render1(x: Doc): Doc1 = match x { 
         case DocEmpty => (0, infinity(), st -> {let (_, cc, _, _): PPState = st; (cc, "")})
