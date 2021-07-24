@@ -93,11 +93,11 @@ namespace Text/PPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(width: Int32, path: String, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
+    pub def writePretty(width: Int32, path: System.FilePath, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
+        use System/IO.WriteMode.{Create};
         let* str = Option.toOk(render(width, doc), "writePretty - render failed");
-        let path1 = System/FilePath.new(path);
-        System/File.writeFile(path1, cs, str)
+        System/IO.writeFileWith({path = path, charset = cs, mode = Create}, str)
 
 
     def toADoc(pageWidth: Int32, d: Doc): ADoc = 
