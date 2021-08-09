@@ -26,46 +26,56 @@
 /// datatype and renders the datatype with Kamin's algorithm.
 /// Kamin's original implementation foregoes the Doc datatype and 
 /// builds the renderer directly.
-/// We also use a StringBuilder for efficiency and have CPS 
-/// transformed the render function.
+/// We also use a Chain[String] for efficiency over String and have 
+/// CPS transformed the render function and the "builder" function 
+/// it generates.
 
 namespace Text/PrettyPrint/Internal/Render {
+
 
     use Text/PrettyPrint.Doc;
     use Text/PrettyPrint.Doc.{DocEmpty, Text, DocLine, Nest, Cat, Alt, Tab};
 
 
-    type alias StringS = StringBuilder ~> Unit
+    type alias StringC = Chain[String]
 
     /// ci (current-indent) * output-current-column * page-width * effective-page-width
     type alias PPState = (Int32, Int32, Int32, Int32)
 
-    /// min-width w/newline * min width wo/newline * st -> (last column * text)
-    type alias FDoc = (Int32, Int32, PPState -> (Int32, StringS))
-        
-    def stringS(s: String): StringS = sb -> StringBuilder.appendString!(sb, s)
-    def spacesS(n: Int32): StringS = sb -> StringBuilder.appendString!(sb, String.repeat(" ", n))
-    def lineSepS(): StringS = sb -> StringBuilder.appendString!(sb, String.lineSeparator())
+    type alias AnswerK = (Int32, StringC) -> (Int32, StringC)
 
-    def seqS(f: StringS, g: StringS): StringS = sb -> {f(sb); g(sb)}
+    /// min-width w/newline * min width wo/newline * st -> (last column * text)
+    type alias FDoc = (Int32, Int32, PPState -> AnswerK -> (Int32, StringC))
+        
+    def stringC(s: String): StringC = Chain.singleton(s)
+    def spacesC(n: Int32): StringC = Chain.singleton(String.repeat(" ", n))
+    def lineSepC(): StringC = Chain.singleton(String.lineSeparator())
+
+    def seqS(x: StringC, y: StringC): StringC = Chain.append(x, y)
+
+    pub def toString(sc: StringC): String & Impure = 
+        let sb = StringBuilder.new();
+        Chain.foreach(StringBuilder.appendString!(sb), sc);
+        StringBuilder.toString(sb)
+
 
     def infinity(): Int32 = 99_999_999
 
     /// `render1` is in CPS
 
     pub def render1(x: Doc, k : FDoc -> FDoc): FDoc = match x { 
-        case DocEmpty => k((0, infinity(), st -> {let (_, cc, _, _): PPState = st; (cc, stringS(""))}))
+        case DocEmpty => k((0, infinity(), (st, ak) -> {let (_, cc, _, _): PPState = st; ak(cc, stringC(""))}))
         case Text(s) => {
             let sz = String.length(s); 
-            k((sz, infinity(), st -> {let (_, cc, _, _): PPState = st; (cc + sz, stringS(s))}))
+            k((sz, infinity(), (st, ak) -> {let (_, cc, _, _): PPState = st; ak(cc + sz, stringC(s))}))
         }
-        case DocLine => k((0, 0, st -> {let (ci, _, _, _): PPState = st; (ci, lineSepS() `seqS` spacesS(ci))}))
+        case DocLine => k((0, 0, (st, ak) -> {let (ci, _, _, _): PPState = st; ak(ci, lineSepC() `seqS` spacesC(ci))}))
         case Nest(n, d) =>
             render1(d, v1 -> {
                 let (mwo1, mw1, fn1) = v1;
-                k((mwo1, mw1, st -> {
+                k((mwo1, mw1, (st, ak) -> {
                     let (ci, cc, pw, epw): PPState = st;
-                    fn1((ci + n, cc, pw, epw))
+                    fn1((ci + n, cc, pw, epw), ak)
                 }))
             })
         case Cat(d1, d2) =>
@@ -73,12 +83,14 @@ namespace Text/PrettyPrint/Internal/Render {
             render1(d2, v2 -> {
                 let (mwo1, mw1, fn1) = v1;
                 let (mwo2, mw2, fn2) = v2;
-                k((Int32.min(mw1, mwo1 + mwo2), Int32.min(mw1, mwo1 + mw2), st -> {
+                k((Int32.min(mw1, mwo1 + mwo2), Int32.min(mw1, mwo1 + mw2), (st, ak) -> {
                     let (ci, cc, pw, epw): PPState = st;
                     let epw1 = Int32.max(pw - mw2, epw - mwo2);
-                    let (cc1, s1) = fn1((ci, cc, pw, epw1));
-                    let (cc2, s2) = fn2((ci, cc1, pw, epw));
-                    (cc2, s1 `seqS` s2)
+                    fn1((ci, cc, pw, epw1), (cc1, s1) -> {
+                        fn2((ci, cc1, pw, epw), (cc2, s2) -> {
+                            ak(cc2, s1 `seqS` s2)
+                        })
+                    })
                 }))
             }))
         case Alt(d1, d2) =>
@@ -86,21 +98,21 @@ namespace Text/PrettyPrint/Internal/Render {
             render1(d2, v2 -> {
                 let (mwo1, mw1, fn1) = v1;
                 let (mwo2, mw2, fn2) = v2;
-                k((Int32.min(mwo1, mwo2), Int32.min(mw1, mw2), st -> {
+                k((Int32.min(mwo1, mwo2), Int32.min(mw1, mw2), (st, ak) -> {
                     let (_, cc, pw, epw): PPState = st;
                     let dfits = cc + mwo1 <= epw or cc + mw1 <= pw;
                     if (dfits) 
-                        fn1(st)
+                        fn1(st, ak)
                     else 
-                        fn2(st)
+                        fn2(st, ak)
                 }))
             }))
         case Tab(d) => 
             render1(d, v1 -> {
                 let (mwo1, mw1, fn1) = v1;
-                k((mwo1, mw1, st -> {
+                k((mwo1, mw1, (st, ak) -> {
                     let (_, cc, pw, epw): PPState = st;
-                    fn1((cc, cc, pw, epw))
+                    fn1((cc, cc, pw, epw), ak)
                 }))
             })
     }

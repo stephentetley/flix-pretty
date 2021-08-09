@@ -88,17 +88,28 @@ namespace Text/PrettyPrint {
         spaces(n) <> x
     
 
-    pub def prettyPrint(width: Int32, x: Doc): String = prettyPrintHelper(width, x) as & Pure
+    /// /// renderer - RenderAlt.flix
+    /// pub def prettyPrint(width: Int32, x: Doc): String = 
+    ///     let (_, _, fn): FDoc = Text/PrettyPrint/Internal/Render.render1(x, k -> k);
+    ///     let (_, str) = fn((0, 0, width, width));
+    ///     str
 
-    def prettyPrintHelper(width: Int32, x: Doc): String & Impure = 
-        let sb = StringBuilder.new();
-        prettyPrintWithStringBuilder!(width, x, sb);
-        StringBuilder.toString(sb)
-
-    pub def prettyPrintWithStringBuilder!(width: Int32, x: Doc, sb: StringBuilder): Unit & Impure  = 
+    pub def prettyPrint(width: Int32, x: Doc): String = 
         let (_, _, fn): FDoc = Text/PrettyPrint/Internal/Render.render1(x, k -> k);
-        let (_, fn2) = fn((0, 0, width, width));
-        fn2(sb)
+        let (_, strC) = fn((0, 0, width, width), (lastCol, txt) -> (lastCol, txt));
+        Text/PrettyPrint/Internal/Render.toString(strC) as & Pure
+
+    /// pub def prettyPrint(width: Int32, x: Doc): String = prettyPrintHelper(width, x) as & Pure
+
+    /// def prettyPrintHelper(width: Int32, x: Doc): String & Impure = 
+    ///     let sb = StringBuilder.new();
+    ///     prettyPrintWithStringBuilder!(width, x, sb);
+    ///     StringBuilder.toString(sb)
+
+    /// pub def prettyPrintWithStringBuilder!(width: Int32, x: Doc, sb: StringBuilder): Unit & Impure  = 
+    ///     let (_, _, fn): FDoc = Text/PrettyPrint/Internal/Render.render1(x, k -> k);
+    ///     let (_, fn2) = fn((0, 0, width, width));
+    ///     fn2(sb)
 
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
