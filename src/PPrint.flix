@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Stephen Tetley
+ * Copyright 2019 Stephen Tetley
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,80 +15,122 @@
  */
 
 
-namespace Text/PPrint {
+/// ## Acknowledgment
+///
+/// This is an implementation of Daan Leijen's PPrint.
+///
+/// The original Haskell library was strictified for Mercury by Ralph Becket
+/// and subsequently ported to Racket by David Herman. This library derives 
+/// from both the Haskell library and Racket one.
 
-    use Text/PPrint/Internal/ADoc.{ADoc};
+namespace Text/PrettyPrint {
 
-    pub enum Doc { 
-        case DocEmpty
+    pub enum Doc {
+        case Empty
         case Text(String)
-        case HCat(Doc, Doc)
-        case VCat(Doc, Doc)
-        case Alt(Doc, Doc)
+        case Line(Bool)
+        case Cat(Doc,Doc)
+        case Nest(Int32,Doc)
+        case Group(Doc)
+        case Column(Int32 -> Doc)
+        case Nesting(Int32 -> Doc)
     }
 
-    
-    pub def alt(d1: Doc, d2: Doc): Doc = Alt(d1, d2)
-    
-    pub def empty(): Doc = DocEmpty
+    instance ToString[Doc] {
+        pub def toString(x: Doc): String = prettyPrint(80, x)
+    }
 
-    pub def beside(x: Doc, y: Doc): Doc = HCat(x, y)
-    
-    pub def <>(x: Doc, y: Doc): Doc = HCat(x, y)
+    enum SimpleDoc {
+        case SEmpty
+        case SText(String, SimpleDoc)
+        case SLine(String, SimpleDoc)
+    }
 
-    pub def <&&>(x: Doc, y: Doc): Doc = VCat(x, y)
+    ///
+    /// A type class for Pretty printing, printing with precedence levels to be added...
+    ///
+    pub lawless class Pretty[a] {
+        pub def pretty(x: a): Doc
+    }
 
-    pub def <<>>(x: Doc, y: Doc): Doc = x <> space() <> y
+    /// pub def toDoc[a: Pretty](x: a): Doc = Text/PrettyPrint/PrettyPrec.prettyPrec(x)
 
-    pub def foldDoc(fn: Doc -> Doc -> Doc, ds: List[Doc]): Doc = 
-        foldDocHelper(fn, ds, d1 -> d1)
+    def extend(s: String, n: Int32): String = 
+        s + String.repeat(" ", n)
 
-    def foldDocHelper(fn: Doc -> Doc -> Doc, ds: List[Doc], k: Doc -> Doc): Doc =
-        match ds { 
-            case Nil => k(empty())
-            case d1 :: Nil => k(d1)
-            case d1 :: rs => foldDocHelper(fn, rs, v1 -> k(fn(d1, v1)))
+
+    def flatten(columnPos: Int32, doc: Doc) : Doc =
+        flattenHelper(columnPos, 0, doc, (x,y) -> (x,y)) |> snd
+
+    def flattenHelper(column: Int32, nest: Int32, doc: Doc, cont : (Int32, Doc) -> (Int32, Doc)): (Int32, Doc) = 
+        match doc {
+            case Empty => cont(column, Empty)
+            case Text(s) => cont(column + String.length(s), doc)
+            case Cat(x,y) => 
+                flattenHelper(column, nest, x, (col1,x1) -> 
+                    flattenHelper(col1, nest, y, (col2, y1) -> 
+                        cont(col2, Cat(x1, y1))))
+            case Nest(n,x) => flattenHelper(column, nest+n, x, cont)
+            case Line(true) => cont(column, Empty)
+            case Line(false) => cont(column+1, Text(" "))
+            case Group(x) => flattenHelper(column, nest, x, cont)
+            case Column(fn) => flattenHelper(column, nest, fn(column), cont)
+            case Nesting(fn) => flattenHelper(column, nest, fn(nest), cont)
         }
 
-    pub def punctuate(sep: Doc, docs:List[Doc]): List[Doc] = punctuateHelper(sep, docs, xs -> xs)
+    def layout (width: Int32, doc: Doc): SimpleDoc = 
+        layoutBest(width, 0, ("",doc) :: Nil, false, identity, _ -> SEmpty)
+
+    def layoutBest(width: Int32, col: Int32, docs: List[(String, Doc)], alternate: Bool, sk: SimpleDoc -> SimpleDoc, fk: Unit -> SimpleDoc): SimpleDoc = 
+        match docs {
+            case Nil => sk(SEmpty)
+            case (_, Empty) :: rs => layoutBest(width, col, rs, alternate, sk, fk)
+            case (iz, Cat(x,y)) :: rs =>
+                layoutBest(width, col, (iz,x) :: (iz,y) :: rs, alternate, sk, fk)
+            case (iz, Nest(n,x)) :: rs => 
+                layoutBest(width, col, (extend(iz,n),x) :: rs, alternate, sk, fk)
+            case (iz, Line(_)) :: rs =>
+                let sk1 = v1 -> sk(SLine(iz, v1));
+                layoutBest(width, String.length(iz), rs, alternate, sk1, fk)
+            case (iz, Group(x)) :: rs =>
+                let fk1 = _ -> layoutBest(width, col, (iz, x) :: rs, alternate, sk, fk);
+                layoutBest(width, col, (iz, flatten(col,x)) :: rs, true, sk, fk1)
+            case (_, Text(t)) :: rs =>
+                if ((width >= 0) and alternate and isTooBig(t,col,width))
+                    fk()
+                else {
+                    let sk1 = v1 -> sk(SText(t, v1));
+                    layoutBest(width, col + String.length(t), rs, alternate, sk1, fk)
+                }
+            case (iz, Column(fn)) :: rs =>
+                layoutBest(width, col, (iz, fn(col)) :: rs, alternate, sk, fk)
+            case (iz, Nesting(fn)) :: rs =>
+                layoutBest(width, col, (iz, fn(String.length(iz))) :: rs, alternate, sk, fk)
+        }
+
+    def isTooBig(text: String, col: Int32, width: Int32) : Bool = 
+        col + String.length(text) > width
 
 
-    pub def punctuateHelper(sepa: Doc, ds:List[Doc], k: List[Doc] -> List[Doc]): List[Doc] = match ds {
-        case Nil => k(Nil)
-        case d :: Nil => k(d :: Nil)
-        case d :: rs    => punctuateHelper(sepa, rs, xs -> k((d <> sepa) :: xs))
-    }
+    ///
+    /// Returns `doc` pretty printed with a line width of `width`.
+    ///
+    pub def prettyPrint(width: Int32, doc: Doc) : String = prettyPrintHelper(width, doc) as & Pure
 
-    pub def intersperse(sepa: Doc, docs:List[Doc]): Doc = sep(punctuate(sepa, docs))
+    ///
+    /// Helper function for `prettyPrint`.
+    ///
+    def prettyPrintHelper(width: Int32, doc: Doc) : String & Impure =
+        let sb = StringBuilder.new();
+        prettyPrint!(sb, width, doc);
+        StringBuilder.toString(sb)
 
-
-    pub def hcat(xs: List[Doc]): Doc = foldDoc(x1 -> y1 -> x1 <> y1, xs)
-
-    pub def vcat(xs: List[Doc]): Doc = foldDoc(x1 -> y1 -> x1 <&&> y1, xs)
-    
-    pub def hsep(xs: List[Doc]): Doc = foldDoc(x1 -> y1 -> x1 <<>> y1, xs)
-
-    pub def sep(xs: List[Doc]): Doc = alt(hsep(xs), vcat(xs))
-
-    pub def text(s: String): Doc = Text(s)
-
-    pub def char(x: Char): Doc = Text(ToString.toString(x))
-
-    pub def hang(n: Int32, x: Doc, y: Doc): Doc = 
-        alt(x <> y, x <&&> nest(n, y))
-
-    pub def nest(n: Int32, x: Doc): Doc = 
-        spaces(n) <> x
-    
-
-    pub def render(pageWidth: Int32, d: Doc): Option[String] & Impure = 
-        use Option.flatMap;
-        let _ = Console.printLine("render.001");
-        let adoc = toADoc(pageWidth, d);
-        let _ = Console.printLine("render.002");
-        let* ans = Text/PPrint/Internal/ADoc.render(adoc);
-        let _ = Console.printLine("render.002");
-        Some(ans)
+    ///
+    /// Appends StringBuilder `sb` with `doc` pretty printed with a line width of `width`.
+    ///
+    pub def prettyPrint!(sb: StringBuilder, width: Int32, doc: Doc): Unit & Impure =
+        let simpleDoc = layout(width, doc);
+        renderSimpleDoc!(sb, simpleDoc)
 
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
@@ -96,31 +138,293 @@ namespace Text/PPrint {
     pub def writePretty(width: Int32, path: System.FilePath, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
         use System/IO.WriteMode.{Create};
-        let* str = Option.toOk(render(width, doc), "writePretty - render failed");
+        let str = prettyPrint(width, doc);
         System/IO.writeFileWith({path = path, charset = cs, mode = Create}, str)
 
-
-    def toADoc(pageWidth: Int32, d: Doc): ADoc = 
-        toADocHelper(pageWidth, d, d1 -> d1)
-
-    def toADocHelper(pw: Int32, d: Doc, k: ADoc -> ADoc): ADoc = 
-        use Text/PPrint/Internal/ADoc.{empty, text, hcat, vcat, alt};
-        match d {
-            case DocEmpty => k(empty(pw))
-            case Text(s) => k(text(pw, s))
-            case HCat(d1, d2) => 
-                toADocHelper(pw, d1, v1 -> 
-                    toADocHelper(pw, d2, v2 -> 
-                        k(hcat(pw, v1, v2))))
-            case VCat(d1, d2) => 
-                toADocHelper(pw, d1, v1 -> 
-                    toADocHelper(pw, d2, v2 -> 
-                        k(vcat(pw, v1, v2))))                        
-            case Alt(d1, d2) => 
-                toADocHelper(pw, d1, v1 -> 
-                    toADocHelper(pw, d2, v2 -> 
-                        k(alt(v1, v2)))) 
+    ///
+    /// Renders a SimpleDoc.
+    ///
+    def renderSimpleDoc!(sb: StringBuilder, sdoc: SimpleDoc) : Unit & Impure =
+        match sdoc {
+            case SEmpty => ()
+            case SText(t,rest) => { 
+                StringBuilder.appendString!(sb, t);
+                renderSimpleDoc!(sb, rest)
+            }
+            case SLine(x,rest) => { 
+                StringBuilder.appendLineSeparator!(sb);
+                StringBuilder.appendString!(sb, x);
+                renderSimpleDoc!(sb, rest)
+            }
         }
+
+
+
+    ///
+    /// # Primitive printers
+    ///
+
+    ///
+    /// Returns the empty document.
+    ///
+    pub def empty(): Doc = Empty
+
+    ///
+    /// Returns the document containing the literal string `s`.
+    ///
+    /// If the input text contains newlines it will be assembled as a list of lines.
+    ///
+    pub def text(s: String): Doc = match String.lines(s) {
+        case Nil => Text("")
+        case x :: Nil => Text(x)
+        case xs => vcat(List.map(Text, xs))
+    }
+
+    ///
+    /// `nest` renders the document `doc` with the current indentation level 
+    /// increased by `i`
+    ///
+    pub def nest(i: Int32, doc: Doc): Doc = Nest (i, doc)
+
+    ///
+    /// Undocumented - used by `align`.
+    /// `column` gives access to the current column position.
+    ///
+    pub def column(f: Int32 -> Doc): Doc = Column(f)
+
+    ///
+    /// Undocumented - used by `align`.
+    /// `nesting` gives access to the current nesting position.
+    /// The nesting position is not the same as the column position.
+    pub def nesting(f: Int32 -> Doc): Doc = Nesting(f)
+
+    ///
+    /// Use the `group` combinator to specify alternate layouts.
+    /// `(group doc)` undoes all linebreaks in doc.
+    ///
+    pub def group(doc: Doc): Doc = Group(doc)
+
+    ////
+    /// `line` advances to the next line and indents to the current nesting level.
+    /// If the line break is undone by group `line` is rendered as a space.
+    ///
+    pub def line(): Doc = Line(false)
+    
+    ///
+    /// `linebreak` advances to the next line and indents to the current nesting 
+    /// level.
+    /// If the line break is undone by group `linebreak` is rendered as empty.    
+    ///
+    pub def linebreak(): Doc = Line(true)
+
+    ///
+    /// This is 'char' in PPrint (Haskell).
+    ///
+    pub def char(ch: Char): Doc = 
+        match ch {
+            case '\n' => line()
+            case '\r' => line()
+            case _ => Char.toString(ch) |> text
+        }
+        
+    ///
+    /// `softline` behaves like `space` if the document it is part of fits the page.
+    /// If it is too large it renders as `line`.
+    ///
+    pub def softline(): Doc = line() |> group
+
+    ///
+    /// `softbreak` behaves like `empty` if the document it is part of fits the page.
+    /// If it is too large it renders as `line`.
+    ///
+    pub def softbreak(): Doc = linebreak() |> group
+
+    ///
+    /// Concatenate documents `x` and `y`.
+    ///
+    pub def beside(x: Doc, y: Doc): Doc = Cat(x,y)
+
+    ///
+    /// Concatenate two documents horizontally (no separating space).
+    ///
+    pub def <>(x: Doc, y: Doc): Doc = beside(x,y)
+
+    ///
+    /// Concatenate two documents horizontally with a separating space.
+    ///
+    pub def besideSpace(x: Doc, y: Doc): Doc = x <> char(' ') <> y
+
+    ///
+    /// Concatenate two documents horizontally with a separating space.
+    /// 
+    pub def <<>>(x: Doc, y:Doc): Doc = besideSpace(x,y)
+
+    ///
+    /// Concatenate two documents with a soft line.
+    /// This is (</>) in PPrint (Haskell).
+    ///
+    pub def besideSoftline(x: Doc, y: Doc): Doc = x <> softline() <> y
+
+    ///
+    /// Concatenate two documents with a soft line.
+    /// This is (</>) in PPrint (Haskell).
+    ///
+    pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)
+
+
+    ///
+    /// Concatenate two documents with a soft break.
+    /// This is (<//>) in PPrint (Haskell).
+    ///
+    pub def besideSoftbreak(x: Doc, y: Doc): Doc = x <> softbreak() <> y
+
+    ///
+    /// Concatenate two documents with a soft break.
+    /// This is (<//>) in PPrint (Haskell).
+    ///
+    pub def <!!>(x: Doc, y: Doc): Doc = besideSoftbreak(x, y)
+
+    ///
+    /// Concatenate two documents separating with `line`.
+    /// This is (<$>) in PPrint (Haskell).
+    ///
+    pub def <&>(x: Doc, y: Doc): Doc = x <> line() <> y
+
+    
+
+    ///
+    /// Concatenate two documents separating with `linebreak`.
+    /// This is (<$$>) in PPrint (Haskell).
+    ///
+    pub def <&&>(x: Doc, y: Doc): Doc = x <> linebreak() <> y
+
+    ///
+    /// Alias for `<&&>`
+    ///
+    pub def vlinebreak(x: Doc, y: Doc): Doc = x <&&> y
+
+
+    // ************************************************************************
+    // List concatenation 
+
+    pub def foldDocs(op: (Doc, Doc) -> Doc, docs: List[Doc]): Doc = 
+        match docs {
+            case Nil => empty()
+            case x :: rs => foldDocsHelper(op, x, rs, identity)
+        }
+
+    def foldDocsHelper(op: (Doc, Doc) -> Doc, acc: Doc, docs:List[Doc], cont: Doc -> Doc): Doc = 
+        match docs {
+            case Nil => cont(acc)
+            case x :: rs => foldDocsHelper(op, op(acc,x), rs, cont)
+        }
+
+    pub def punctuate(sep: Doc, docs:List[Doc]): List[Doc] = punctuateHelper(sep, docs, xs -> xs)
+
+
+    pub def punctuateHelper(sep: Doc, ds:List[Doc], k: List[Doc] -> List[Doc]): List[Doc] = match ds {
+        case Nil => k(Nil)
+        case d :: Nil => k(d :: Nil)
+        case d :: rs    => punctuateHelper(sep, rs, xs -> k((d <> sep) :: xs))
+    }
+
+    pub def intersperse(sep: Doc, docs:List[Doc]): Doc = cat(punctuate(sep, docs))
+
+    ///
+    /// Punctuate the list of documents with the separator `sep` and bookend them 
+    /// with `left` and `right`.
+    ///
+    pub def encloseSep(left:Doc, right:Doc, sep: Doc, docs: List[Doc]): Doc = 
+        encloseSepHelper(sep, docs, left, d -> d <> right)
+
+    ///
+    /// Helper function for `encloseSep`.
+    ///
+    def encloseSepHelper(sep: Doc, docs: List[Doc], acc: Doc, cont: Doc -> Doc): Doc = 
+        match docs {
+            case Nil => cont(acc)
+            case x :: Nil => {
+                let acc1 = acc <!!> x;
+                cont(acc1)
+            }
+            case x :: rs => {
+                let acc1 = acc <!!> x <> sep;
+                encloseSepHelper(sep, rs, acc1, cont)
+            }
+        }
+
+    ///
+    /// Enclose in parens and separate with comma (a,b,c,...)
+    ///
+    pub def tupled(docs: List[Doc]) : Doc = encloseSep(lparen(), rparen(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with comma [a,b,c,...]
+    ///
+    pub def commaBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with comma {a,b,c,...}
+    ///
+    pub def commaBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi [a;b;c,...]
+    ///
+    pub def semiBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), semi(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi {a;b;c,...}
+    ///
+    pub def semiBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), semi(), docs)
+
+    ///
+    /// Separate documents horizontally with a space.
+    ///
+    pub def hsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <<>> y, docs)
+
+    ///
+    /// Separate documents vertically with (<&>)
+    ///
+    pub def vsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <&> y, docs)
+
+    ///
+    /// Concatenate documents horizontally (no space).
+    ///
+    pub def hcat(docs: List[Doc]): Doc= foldDocs((x,y) -> x <> y, docs)
+
+    ///
+    /// Separate documents with (<&&>)
+    ///
+    pub def vcat(docs: List[Doc]): Doc = foldDocs((x,y) -> x <&&> y, docs)
+
+    ///
+    /// Horizontally until it doesn't fit...
+    ///
+    pub def fillCat(docs: List[Doc]): Doc = List.foldRight((x,y) -> x <!!> y, empty(), docs)
+
+
+    ///
+    /// Concat horizontally or vertically...
+    ///
+    pub def cat(docs: List[Doc]): Doc = group(vcat(docs))
+
+    ///
+    /// `(align d)` renders the document `d` with the nesting level set to 
+    /// the current column.
+    ///
+    pub def align(doc: Doc) :Doc = 
+        column(k -> nesting(i -> nest(k - i, doc)))
+
+    ///
+    /// Implement hanging indentation.
+    ///
+    pub def hang(i: Int32, doc: Doc): Doc = align(nest(i,doc))
+
+    ///
+    /// Indent the document `doc` with `i` spaces.
+    ///
+    pub def indent(i: Int32, doc: Doc): Doc = hang(i, repeatString(" ", i) <> doc)
 
     ///
     /// Print an Int8 literal.
@@ -258,15 +562,8 @@ namespace Text/PPrint {
 
     ///
     /// Enclose the document body between `l` (left) and `r` (right).
-    /// 
     ///
     pub def enclose(l: Doc, r: Doc, body: Doc): Doc = l <> body <> r
-
-    ///
-    /// Enclose the document body between `l` (left) and `r` (right).
-    /// 
-    ///
-    pub def softEnclose(l: Doc, r: Doc, body: Doc): Doc = sep(l :: body :: r :: Nil)
 
     ///
     /// Enclose in single quotes '...'
@@ -279,27 +576,15 @@ namespace Text/PPrint {
     pub def dquotes(x: Doc): Doc = enclose(dquote(), dquote(), x)
     
     ///
-    /// Enclose in curly braces {...}
+    /// Enclose in angle braces {...}
     ///
     pub def braces(x: Doc): Doc = enclose(lbrace(), rbrace(), x)
-
     
-    ///
-    /// Enclose in curly braces {...}
-    ///
-    pub def softBraces(x: Doc): Doc = softEnclose(lbrace(), rbrace(), x)
-
-
     ///
     /// Enclose in parentheses (...)
     ///
     pub def parens(x: Doc): Doc = enclose(lparen(), rparen(), x)
-
-    ///
-    /// Enclose in curly braces {...}
-    ///
-    pub def softParens(x: Doc): Doc = softEnclose(lparen(), rparen(), x)
-
+    
     ///
     /// Enclose in angle brackets <...>
     ///
@@ -317,5 +602,4 @@ namespace Text/PPrint {
     pub def maybeParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
 
 
-
-}
+ }
