@@ -58,13 +58,14 @@ namespace Text/PrettyPrint/Lindig {
             }          
         }
 
-    pub enum Mode { 
-        case Flat1
-        case Break1
+    pub enum GroupMode { 
+        case GFlat
+        case GBreak
     }
 
-    type alias Format1 = (Int32, Mode, Doc)
+    type alias Format1 = (Int32, GroupMode, Doc)
 
+    /// TODO CPS transform
     def fits(width: Int32, xs: List[Format1]): Bool = 
         match xs {
             case _ if (width < 0) => false 
@@ -74,9 +75,9 @@ namespace Text/PrettyPrint/Lindig {
             case (i, m, Nest(j, x)) :: rs   => fits(width, (i + j, m, x) :: rs)
             case (_, _, Text(s)) :: rs      => fits(width - String.length(s), rs)
             case (_, _, Char(_)) :: rs      => fits(width - 1, rs)
-            case (_, Flat1, Break(s)) :: rs => fits(width - String.length(s), rs)
-            case (_, Break1, Break(_)) :: _ => true    // Impossible
-            case (i, _, Group(x)) :: rs     => fits(width, (i, Flat1, x) :: rs)
+            case (_, GFlat, Break(s)) :: rs => fits(width - String.length(s), rs)
+            case (_, GBreak, Break(_)) :: _ => true    // Impossible
+            case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
         }
 
     /// Needs CPS transformation...
@@ -94,23 +95,23 @@ namespace Text/PrettyPrint/Lindig {
                 format(width, col + 1, rs, v1 -> 
                     cont(SText(ToString.toString(c), v1)))
 
-            case (_, Flat1, Break(s)) :: rs     => 
+            case (_, GFlat, Break(s)) :: rs     => 
                 format(width, col + String.length(s), rs, v1 -> 
                     cont(SText(s, v1)))
 
-            case (i, Break1, Break(_)) :: rs    => 
+            case (i, GBreak, Break(_)) :: rs    => 
                 format(width, i, rs, v1 -> 
                     cont(SLine(i, v1)))
                     
             case (i, _, Group(x)) :: rs         =>
-                if (fits(width - col, (i, Flat1, x) :: rs))
-                    format(width, col, (i, Flat1, x) :: rs, cont)
+                if (fits(width - col, (i, GFlat, x) :: rs))
+                    format(width, col, (i, GFlat, x) :: rs, cont)
                 else
-                    format(width, col, (i, Break1, x) :: rs, cont)
+                    format(width, col, (i, GBreak, x) :: rs, cont)
         }
 
     pub def render(lineWidth: Int32, doc: Doc): String =
-        format(lineWidth, 1, (1, Flat1, doc) :: Nil, d1 -> d1) |> sdocToString
+        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
