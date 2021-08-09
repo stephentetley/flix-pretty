@@ -65,7 +65,7 @@ namespace Text/PrettyPrint/Lindig {
 
     type alias Format1 = (Int32, GroupMode, Doc)
 
-    /// TODO CPS transform
+    /// `fits` is already tail recursive so doesn't need CPS transforming.
     def fits(width: Int32, xs: List[Format1]): Bool = 
         match xs {
             case _ if (width < 0) => false 
@@ -80,7 +80,7 @@ namespace Text/PrettyPrint/Lindig {
             case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
         }
 
-    /// Needs CPS transformation...
+    /// 
     def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc =
         match xs {
             case  Nil => cont(SEmpty)
@@ -159,12 +159,8 @@ namespace Text/PrettyPrint/Lindig {
     ///
     pub def nest(i: Int32, doc: Doc): Doc = Nest(i, doc)
 
-    ///
-    /// `nest` renders the document `doc` with the current indentation level 
-    /// increased by `i`
-    ///
-    pub def hang(i: Int32, doc: Doc): Doc = nest(i, doc)
-
+    
+    
     ///
     /// `break`
     ///
@@ -216,6 +212,12 @@ namespace Text/PrettyPrint/Lindig {
     /// This is (</>) in PPrint (Haskell).
     ///
     pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)
+
+
+    pub def hang(n: Int32, x: Doc): Doc = 
+        group(nest(n, x))
+
+
 
     ///
     /// Concatenate two documents separating with `linebreak`.
