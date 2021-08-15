@@ -121,6 +121,13 @@ namespace Text/PrettyPrint {
     pub def render(lineWidth: Int32, doc: Doc): String =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
+
+    pub def renderToStringBuilder!(sb: StringBuilder, lineWidth: Int32, doc: Doc): Unit & Impure =
+        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
+            |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
+
+
+
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
@@ -237,7 +244,7 @@ namespace Text/PrettyPrint {
         case (_, _) => x <> breakWith(String.lineSeparator()) <> y
     }
 
-
+    /// TODO - to investigate... this is not working as expected inside a `hang`.
     pub def <&&>(x: Doc, y: Doc): Doc = x <> breakWith(String.lineSeparator()) <> y
 
     // ************************************************************************
@@ -272,7 +279,7 @@ namespace Text/PrettyPrint {
     /// Punctuate the list of documents with the separator `sep` and bookend them 
     /// with `left` and `right`.
     ///
-    pub def encloseSep(left:Doc, right:Doc, sep: Doc, docs: List[Doc]): Doc = 
+    pub def encloseSep(left: Doc, right: Doc, sep: Doc, docs: List[Doc]): Doc = 
         encloseSepHelper(sep, docs, left, d -> d <> right)
 
     ///

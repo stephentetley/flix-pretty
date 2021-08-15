@@ -1,6 +1,6 @@
-use Text/PrettyPrint/Lindig.{Doc};
-use Text/PrettyPrint/Lindig.{render, text, group, nest, line, break};
-use Text/PrettyPrint/Lindig.{<>, <!>, <<>>};
+use Text/PrettyPrint.{Doc};
+use Text/PrettyPrint.{render, text, group, nest, line, break};
+use Text/PrettyPrint.{<>, <!>, <<>>};
 
 def main(_args: Array[String]): Int32 & Impure = 
     Console.printLine("Running...");
