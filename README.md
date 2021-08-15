@@ -1,13 +1,13 @@
-# flix-pprint
+# flix-pretty
 
 A pretty print library for Flix.
 
 ## Acknowledgment
 
-This is an implementation of Daan Leijen's PPrint.
+This is a Flix implementation of Christian Lindig's code from the paper 
+Strictly Pretty.
 
-The original Haskell library was strictified for Mercury by Ralph Becket
-and subsequently ported to Racket by David Herman. This library derives 
-from both the Haskell library and Racket one.
+https://lindig.github.io/papers/strictly-pretty-2000.pdf
 
-Note - flix-pprint has a dependency on `flix-sandbox`.
+Note - flix-pprint currently has a dependency on `flix-sandbox` for some
+file IO operations.

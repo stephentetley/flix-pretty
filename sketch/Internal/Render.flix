@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/// ## Acknowledgment
+/// # Acknowledgment
 ///
 /// This is an implementation of Samuel Kamin and Thomas Nordin's 
 /// strict SML pretty printer.
