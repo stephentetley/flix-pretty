@@ -59,7 +59,7 @@ namespace Text/PrettyPrint {
                 sdocWorker(sb, d, sk)
             }
             case SLine(i, d) => {
-                let prefix = String.repeat(" ", i);
+                let prefix = String.repeat(i, " ");
                 appendLineSeparator!(sb);
                 appendString!(sb, prefix);
                 sdocWorker(sb, d, sk)
@@ -390,10 +390,10 @@ namespace Text/PrettyPrint {
     pub def bigInt(i: BigInt): Doc = BigInt.toString(i) |> text
 
     pub def repeatString(s: String, n: Int32): Doc = 
-        String.repeat(s, n) |> text
+        String.repeat(n, s) |> text
 
     pub def repeat(d: Doc, n: Int32): Doc = 
-        List.repeat(d, n) |> hcat
+        List.repeat(n, d) |> hcat
 
     // ************************************************************************
     // Character printers
