@@ -35,6 +35,10 @@ namespace Text/PrettyPrint {
         case Group(Doc)
     }
     
+    instance ToString[Doc] {
+        pub def toString(d: Doc): String = render(80, d)
+    }
+
     enum SDoc { 
         case SEmpty
         case SText(String, SDoc)

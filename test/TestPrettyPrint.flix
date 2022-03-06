@@ -14,70 +14,70 @@
  * limitations under the License.
  */
 
-use Text/PrettyPrint.{toString};
 
 namespace TestPrettyPrint {
 
-/////////////////////////////////////////////////////////////////////////////
-// empty                                                                   //
-/////////////////////////////////////////////////////////////////////////////
 
-@test
-def empty01(): Bool = 
-    use Text/PrettyPrint.{empty};
-    toString(empty()) == ""
+    /////////////////////////////////////////////////////////////////////////////
+    // empty                                                                   //
+    /////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////
-// text                                                                    //
-/////////////////////////////////////////////////////////////////////////////
+    @test
+    def empty01(): Bool = 
+        use Text/PrettyPrint.{empty};
+        ToString.toString(empty()) == ""
 
-@test
-def text01(): Bool =
-    use Text/PrettyPrint.{text};
-    toString(text("")) == ""
+    /////////////////////////////////////////////////////////////////////////////
+    // text                                                                    //
+    /////////////////////////////////////////////////////////////////////////////
 
-@test
-def text02(): Bool =
-    use Text/PrettyPrint.{text};
-    toString(text("A")) == "A"
+    @test
+    def text01(): Bool =
+        use Text/PrettyPrint.{text};
+        ToString.toString(text("")) == ""
 
-@test
-def text03(): Bool =
-    use Text/PrettyPrint.{text};
-    toString(text("AB")) == "AB"
+    @test
+    def text02(): Bool =
+        use Text/PrettyPrint.{text};
+        ToString.toString(text("A")) == "A"
 
-@test
-def text04(): Bool =
-    use Text/PrettyPrint.{text};
-    toString(text("A B")) == "A B"
+    @test
+    def text03(): Bool =
+        use Text/PrettyPrint.{text};
+        ToString.toString(text("AB")) == "AB"
 
-/////////////////////////////////////////////////////////////////////////////
-// Punctuate                                                               //
-/////////////////////////////////////////////////////////////////////////////
+    @test
+    def text04(): Bool =
+        use Text/PrettyPrint.{text};
+        ToString.toString(text("A B")) == "A B"
 
-@test
-pub def punctuate01(): Bool =
-    use Text/PrettyPrint.{punctuate, comma};
-    let ds = punctuate(comma(), Nil);
-    List.map(toString, ds) == Nil
+    /////////////////////////////////////////////////////////////////////////////
+    // Punctuate                                                               //
+    /////////////////////////////////////////////////////////////////////////////
 
-@test
-pub def punctuate02(): Bool =
-    use Text/PrettyPrint.{punctuate, comma, text};
-    let ds = punctuate(comma(), text("abc") :: Nil);
-    List.map(toString, ds) == "abc" :: Nil
+    @test
+    pub def punctuate01(): Bool =
+        use Text/PrettyPrint.{punctuate, comma};
+        let ds = punctuate(comma(), Nil);
+        List.map(ToString.toString, ds) == Nil
 
-@test
-pub def punctuate03(): Bool =
-    use Text/PrettyPrint.{punctuate, comma, text};
-    let ds = punctuate(comma(), text("abc") :: text("def") :: Nil);
-    List.map(toString, ds) == "abc," :: "def" :: Nil
+    @test
+    pub def punctuate02(): Bool =
+        use Text/PrettyPrint.{punctuate, comma, text};
+        let ds = punctuate(comma(), text("abc") :: Nil);
+        List.map(ToString.toString, ds) == "abc" :: Nil
 
-@test
-pub def punctuate04(): Bool =
-    use Text/PrettyPrint.{punctuate, comma, text};
-    let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
-    List.map(toString, ds) == "abc," :: "def," :: "ghi" :: Nil
+    @test
+    pub def punctuate03(): Bool =
+        use Text/PrettyPrint.{punctuate, comma, text};
+        let ds = punctuate(comma(), text("abc") :: text("def") :: Nil);
+        List.map(ToString.toString, ds) == "abc," :: "def" :: Nil
+
+    @test
+    pub def punctuate04(): Bool =
+        use Text/PrettyPrint.{punctuate, comma, text};
+        let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
+        List.map(ToString.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
 
 
 }
