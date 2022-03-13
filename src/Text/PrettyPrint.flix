@@ -59,13 +59,13 @@ namespace Text/PrettyPrint {
         match sdoc {
             case SEmpty => sk()
             case SText(s, d) => {
-                appendString!(sb, s);  
+                appendString!(s, sb);  
                 sdocWorker(sb, d, sk)
             }
             case SLine(i, d) => {
                 let prefix = String.repeat(i, " ");
                 appendLineSeparator!(sb);
-                appendString!(sb, prefix);
+                appendString!(prefix, sb);
                 sdocWorker(sb, d, sk)
             }          
         }
