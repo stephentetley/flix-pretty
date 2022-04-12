@@ -135,11 +135,11 @@ namespace Text/PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(width: Int32, path: System.FilePath, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
+    pub def writePretty(width: Int32, path: FlixSandbox/System.FilePath, cs: FlixSandbox/Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
-        use System/IO.WriteMode.{Create};
+        use FlixSandbox/System/IO.WriteMode.{Create};
         let str = render(width, doc);
-        System/IO.writeFileWith({path = path, charset = cs, mode = Create}, str)
+        FlixSandbox/System/IO.writeFileWith({path = path, charset = cs, mode = Create}, str)
 
 
     ///
