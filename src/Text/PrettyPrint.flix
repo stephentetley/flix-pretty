@@ -46,15 +46,13 @@ namespace Text/PrettyPrint {
     }
 
     pub def sdocToString(source: SDoc): String = 
-        sdocToStringHelper(source) as & Pure 
+        region r {
+            let sb = new StringBuilder(r);
+            sdocWorker(sb, source, k1 -> k1);
+            StringBuilder.toString(sb)
+        }
 
-
-    def sdocToStringHelper(source: SDoc): String & Impure = 
-        let sb = StringBuilder.new();
-        sdocWorker(sb, source, k1 -> k1);
-        StringBuilder.toString(sb)
-
-    def sdocWorker(sb: StringBuilder, sdoc: SDoc, sk: Unit -> Unit): Unit & Impure = 
+    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, sk: Unit -> Unit): Unit \ Write(r) = 
         use StringBuilder.{appendString!, appendLineSeparator!};
         match sdoc {
             case SEmpty => sk()
@@ -126,7 +124,7 @@ namespace Text/PrettyPrint {
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
 
-    pub def renderToStringBuilder!(sb: StringBuilder, lineWidth: Int32, doc: Doc): Unit & Impure =
+    pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ Write(r) =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
 
