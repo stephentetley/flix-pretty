@@ -133,7 +133,9 @@ namespace Text/PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(width: Int32, path: FlixSandbox/System.FilePath, cs: FlixSandbox/Text.Charset, doc: Doc): Result[Unit, String] & Impure =
+    /// TODO remove dependcy on flix-sandbox...
+    ///
+    pub def writePretty(width: Int32, path: FlixSandbox/System.FilePath, cs: Text.Charset, doc: Doc): Result[Unit, String] & Impure =
         use Result.flatMap;
         use FlixSandbox/System/IO.WriteMode.{Create};
         let str = render(width, doc);

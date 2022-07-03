@@ -9,5 +9,12 @@ Strictly Pretty.
 
 https://lindig.github.io/papers/strictly-pretty-2000.pdf
 
-Note - flix-pprint currently has a dependency on `flix-sandbox` for some
-file IO operations.
+Dependencies:
+
+https://github.com/stephentetley/flix-sandbox
+https://github.com/stephentetley/charset-locale
+https://github.com/stephentetley/collection-interop
+
+Apache Commons IO
+
+Compatible `pkg` and `jar` files are included in the `lib` directory.
