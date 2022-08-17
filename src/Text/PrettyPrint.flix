@@ -25,8 +25,8 @@
 
 namespace Text/PrettyPrint {
 
-    use Interop/System.FilePath;
-    use Interop/Text.Charset;
+    use Basis/System.FilePath;
+    use Basis/Text.Charset;
 
     pub enum Doc {
         case Empty
@@ -136,13 +136,11 @@ namespace Text/PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    /// TODO remove dependency on flix-sandbox...
-    ///
-    pub def writePretty(width: Int32, path: FilePath, cs: Charset, doc: Doc): Result[Unit, String] & Impure =
+    pub def writePretty(path: FilePath, cs: Charset, width: Int32, doc: Doc): Result[Unit, String] \ IO =
         use Result.flatMap;
-        use FlixSandbox/System/IO.WriteMode.{Create};
+        let opts = Basis/System/StandardOpenOption/StandardOpenOption.Create :: Nil;
         let str = render(width, doc);
-        FlixSandbox/System/IO.writeFileWith({path = path, charset = cs, mode = Create}, str)
+        Basis/System/Files.writeStringWithCharset(path, cs, opts, str)
 
 
     ///
