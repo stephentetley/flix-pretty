@@ -25,8 +25,8 @@
 
 namespace Text/PrettyPrint {
 
-    use Basis/System.FilePath;
-    use Basis/Text.Charset;
+    use Basis/NIO/File.Path;
+    use Basis/NIO/Charset.Charset;
 
     pub enum Doc {
         case Empty
@@ -136,11 +136,11 @@ namespace Text/PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(path: FilePath, cs: Charset, width: Int32, doc: Doc): Result[Unit, String] \ IO =
+    pub def writePretty(path: Path, cs: Charset, width: Int32, doc: Doc): Result[Unit, String] \ IO =
         use Result.flatMap;
-        let opts = Basis/System/StandardOpenOption/StandardOpenOption.Create :: Nil;
+        let opts = Basis/NIO/File/StandardOpenOption/StandardOpenOption.Create :: Nil;
         let str = render(width, doc);
-        Basis/System/Files.writeStringWithCharset(path, cs, opts, str)
+        Basis/NIO/File/Files.writeStringWithCharset!(path, cs, opts, str)
 
 
     ///
