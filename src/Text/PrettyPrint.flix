@@ -138,7 +138,7 @@ namespace Text/PrettyPrint {
     ///
     pub def writePretty(path: Path, cs: Charset, width: Int32, doc: Doc): Result[Unit, String] \ IO =
         use Result.flatMap;
-        let opts = Basis/NIO/File/StandardOpenOption/StandardOpenOption.Create :: Nil;
+        let opts = List.map(Basis/NIO/File/StandardOpenOption.toOpenOption, Basis/NIO/File/StandardOpenOption/StandardOpenOption.Create :: Nil);
         let str = render(width, doc);
         Basis/NIO/File/Files.writeStringWithCharset!(path, cs, opts, str)
 
