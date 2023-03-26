@@ -25,8 +25,20 @@
 
 namespace Text/PrettyPrint {
 
-    use Basis/NIO/File.Path;
-    use Basis/NIO/Charset.Charset;
+    use Basis/NIO/File.Path
+    use Basis/NIO/Charset.Charset
+    use Text/PrettyPrint.Doc
+    use Text/PrettyPrint.Doc.{
+        Empty, Cat, Char, Text, Nest, Break, Group
+    }
+    use Text/PrettyPrint.SDoc
+    use Text/PrettyPrint.SDoc.{
+        SEmpty, SText, SLine
+    }
+    use Text/PrettyPrint.GroupMode
+    use Text/PrettyPrint.GroupMode.{ 
+        GFlat, GBreak
+    }
 
     pub enum Doc {
         case Empty
@@ -49,8 +61,8 @@ namespace Text/PrettyPrint {
     }
 
     pub def sdocToString(source: SDoc): String = 
-        region r {
-            let sb = new StringBuilder(r);
+        region rc {
+            let sb = StringBuilder.new(rc);
             sdocWorker(sb, source, k1 -> k1);
             StringBuilder.toString(sb)
         }
@@ -136,7 +148,7 @@ namespace Text/PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(path: Path, cs: Charset, width: Int32, doc: Doc): Result[Unit, String] \ IO =
+    pub def writePretty(path: Path, cs: Charset, width: Int32, doc: Doc): Result[String, Unit] \ IO =
         use Result.flatMap;
         let opts = List.map(Basis/NIO/File/StandardOpenOption.toOpenOption, Basis/NIO/File/StandardOpenOption/StandardOpenOption.Create :: Nil);
         let str = render(width, doc);
