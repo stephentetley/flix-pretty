@@ -23,10 +23,10 @@
 /// from both the Haskell library and Racket one.
 
 
-namespace Text/PrettyPrint {
+mod Text.PrettyPrint {
 
-    use Text/PrettyPrint.Doc
-    use Text/PrettyPrint.Doc.{
+    use Text.PrettyPrint.Doc
+    use Text.PrettyPrint.Doc.{
         Empty, Cat, Char, Text, Nest, Break, Group
     }
     use Text/PrettyPrint.SDoc
@@ -147,7 +147,6 @@ namespace Text/PrettyPrint {
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
     pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
-        use Result.flatMap;
         let str = render(width, doc);
         File.write(path, str)
 

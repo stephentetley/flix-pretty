@@ -15,7 +15,7 @@
  */
 
 
-namespace TestPrettyPrint {
+mod TestPrettyPrint {
 
 
     /////////////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ namespace TestPrettyPrint {
 
     @test
     def empty01(): Bool = 
-        use Text/PrettyPrint.{empty};
+        use Text.PrettyPrint.{empty};
         ToString.toString(empty()) == ""
 
     /////////////////////////////////////////////////////////////////////////////
@@ -33,22 +33,22 @@ namespace TestPrettyPrint {
 
     @test
     def text01(): Bool =
-        use Text/PrettyPrint.{text};
+        use Text.PrettyPrint.{text};
         ToString.toString(text("")) == ""
 
     @test
     def text02(): Bool =
-        use Text/PrettyPrint.{text};
+        use Text.PrettyPrint.{text};
         ToString.toString(text("A")) == "A"
 
     @test
     def text03(): Bool =
-        use Text/PrettyPrint.{text};
+        use Text.PrettyPrint.{text};
         ToString.toString(text("AB")) == "AB"
 
     @test
     def text04(): Bool =
-        use Text/PrettyPrint.{text};
+        use Text.PrettyPrint.{text};
         ToString.toString(text("A B")) == "A B"
 
     /////////////////////////////////////////////////////////////////////////////
@@ -57,25 +57,25 @@ namespace TestPrettyPrint {
 
     @test
     pub def punctuate01(): Bool =
-        use Text/PrettyPrint.{punctuate, comma};
+        use Text.PrettyPrint.{punctuate, comma};
         let ds = punctuate(comma(), Nil);
         List.map(ToString.toString, ds) == Nil
 
     @test
     pub def punctuate02(): Bool =
-        use Text/PrettyPrint.{punctuate, comma, text};
+        use Text.PrettyPrint.{punctuate, comma, text};
         let ds = punctuate(comma(), text("abc") :: Nil);
         List.map(ToString.toString, ds) == "abc" :: Nil
 
     @test
     pub def punctuate03(): Bool =
-        use Text/PrettyPrint.{punctuate, comma, text};
+        use Text.PrettyPrint.{punctuate, comma, text};
         let ds = punctuate(comma(), text("abc") :: text("def") :: Nil);
         List.map(ToString.toString, ds) == "abc," :: "def" :: Nil
 
     @test
     pub def punctuate04(): Bool =
-        use Text/PrettyPrint.{punctuate, comma, text};
+        use Text.PrettyPrint.{punctuate, comma, text};
         let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
         List.map(ToString.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
 
