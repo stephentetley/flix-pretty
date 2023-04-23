@@ -29,12 +29,12 @@ mod Text.PrettyPrint {
     use Text.PrettyPrint.Doc.{
         Empty, Cat, Char, Text, Nest, Break, Group
     }
-    use Text/PrettyPrint.SDoc
-    use Text/PrettyPrint.SDoc.{
+    use Text.PrettyPrint.SDoc
+    use Text.PrettyPrint.SDoc.{
         SEmpty, SText, SLine
     }
-    use Text/PrettyPrint.GroupMode
-    use Text/PrettyPrint.GroupMode.{ 
+    use Text.PrettyPrint.GroupMode
+    use Text.PrettyPrint.GroupMode.{ 
         GFlat, GBreak
     }
 
@@ -241,9 +241,11 @@ mod Text.PrettyPrint {
     ///
     pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)
 
-
-    pub def hang(n: Int32, x: Doc): Doc = 
-        group(nest(n, x))
+    ///
+    /// Group and nest document `d`.
+    ///
+    pub def hang(n: Int32, d: Doc): Doc =
+        group(nest(n, d))
 
 
 
