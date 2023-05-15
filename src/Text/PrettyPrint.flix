@@ -65,7 +65,7 @@ mod Text.PrettyPrint {
             StringBuilder.toString(sb)
         }
 
-    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, sk: Unit -> Unit): Unit \ Write(r) = 
+    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, sk: Unit -> Unit): Unit \ r = 
         use StringBuilder.{appendString!, appendLineSeparator!};
         match sdoc {
             case SEmpty => sk()
@@ -137,7 +137,7 @@ mod Text.PrettyPrint {
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
 
-    pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ Write(r) =
+    pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
 
