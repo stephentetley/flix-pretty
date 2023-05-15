@@ -38,6 +38,10 @@ mod Text.PrettyPrint {
         GFlat, GBreak
     }
 
+    /// 
+    /// The document datatype.
+    /// Constructors should not be used directly.
+    /// 
     pub enum Doc {
         case Empty
         case Cat(Doc, Doc)
@@ -52,95 +56,114 @@ mod Text.PrettyPrint {
         pub def toString(d: Doc): String = render(80, d)
     }
 
-    enum SDoc { 
+    /// 
+    /// The simplified intermedaite document datatype.
+    /// Constructors should not be used directly.
+    /// 
+    pub enum SDoc { 
         case SEmpty
         case SText(String, SDoc)
         case SLine(Int32, SDoc)
     }
 
-    pub def sdocToString(source: SDoc): String = 
-        region rc {
-            let sb = StringBuilder.new(rc);
-            sdocWorker(sb, source, k1 -> k1);
-            StringBuilder.toString(sb)
-        }
+    /// 
+    /// Render the SDoc `source` to a String.
+    ///
+    pub def sdocToString(source: SDoc): String = region rc {
+        let sb = StringBuilder.new(rc);
+        sdocWorker(sb, source, identity);
+        StringBuilder.toString(sb)
+    }
 
-    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, sk: Unit -> Unit): Unit \ r = 
+
+    /// 
+    /// Helper function for `sdocToString`.
+    ///
+    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, k: Unit -> Unit): Unit \ r = 
         use StringBuilder.{appendString!, appendLineSeparator!};
         match sdoc {
-            case SEmpty => sk()
+            case SEmpty      => k()
             case SText(s, d) => {
                 appendString!(s, sb);  
-                sdocWorker(sb, d, sk)
+                sdocWorker(sb, d, k)
             }
             case SLine(i, d) => {
                 let prefix = String.repeat(i, " ");
                 appendLineSeparator!(sb);
                 appendString!(prefix, sb);
-                sdocWorker(sb, d, sk)
+                sdocWorker(sb, d, k)
             }          
         }
 
-    pub enum GroupMode { 
+    enum GroupMode { 
         case GFlat
         case GBreak
     }
 
+
     type alias Format1 = (Int32, GroupMode, Doc)
 
-    /// `fits` is already tail recursive so doesn't need CPS transforming.
-    def fits(width: Int32, xs: List[Format1]): Bool = 
-        match xs {
-            case _ if (width < 0) => false 
-            case Nil => true
-            case (_, _, Empty) :: rs        => fits(width, rs)
-            case (i, m, Cat(x, y)) :: rs    => fits(width, (i, m, x) :: (i, m, y) :: rs)
-            case (i, m, Nest(j, x)) :: rs   => fits(width, (i + j, m, x) :: rs)
-            case (_, _, Text(s)) :: rs      => fits(width - String.length(s), rs)
-            case (_, _, Char(_)) :: rs      => fits(width - 1, rs)
-            case (_, GFlat, Break(s)) :: rs => fits(width - String.length(s), rs)
-            case (_, GBreak, Break(_)) :: _ => true    // Impossible
-            case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
-        }
+    /// 
+    /// Helper function for `format`.
+    ///
+    def fits(width: Int32, xs: List[Format1]): Bool = match xs {
+        case _ if (width < 0)           => false 
+        case Nil                        => true
+        case (_, _, Empty) :: rs        => fits(width, rs)
+        case (i, m, Cat(x, y)) :: rs    => fits(width, (i, m, x) :: (i, m, y) :: rs)
+        case (i, m, Nest(j, x)) :: rs   => fits(width, (i + j, m, x) :: rs)
+        case (_, _, Text(s)) :: rs      => fits(width - String.length(s), rs)
+        case (_, _, Char(_)) :: rs      => fits(width - 1, rs)
+        case (_, GFlat, Break(s)) :: rs => fits(width - String.length(s), rs)
+        case (_, GBreak, Break(_)) :: _ => true    // Impossible
+        case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
+    }
 
     /// 
-    def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc =
-        match xs {
-            case  Nil => cont(SEmpty)
-            case (_ ,_ , Empty) :: rs           => format(width, col, rs, cont)
-            case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
-            case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs, cont)
-            case (_, _, Text(s)) :: rs          => 
-                format(width, col + String.length(s), rs, v1 -> 
-                    cont(SText(s, v1)))
+    /// Render a list of intermediate `Format1` documents to an SDoc.
+    ///    
+    def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc = match xs {
+        case  Nil                           => cont(SEmpty)
+        case (_ ,_ , Empty) :: rs           => format(width, col, rs, cont)
+        case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
+        case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs, cont)
 
-            case (_, _, Char(c)) :: rs          => 
-                format(width, col + 1, rs, v1 -> 
-                    cont(SText(ToString.toString(c), v1)))
+        case (_, _, Text(s)) :: rs          => 
+            format(width, col + String.length(s), rs, v1 -> 
+                cont(SText(s, v1)))
 
-            case (_, GFlat, Break(s)) :: rs     => 
-                format(width, col + String.length(s), rs, v1 -> 
-                    cont(SText(s, v1)))
+        case (_, _, Char(c)) :: rs          => 
+            format(width, col + 1, rs, v1 -> 
+                cont(SText(ToString.toString(c), v1)))
 
-            case (i, GBreak, Break(_)) :: rs    => 
-                format(width, i, rs, v1 -> 
-                    cont(SLine(i, v1)))
-                    
-            case (i, _, Group(x)) :: rs         =>
-                if (fits(width - col, (i, GFlat, x) :: rs))
-                    format(width, col, (i, GFlat, x) :: rs, cont)
-                else
-                    format(width, col, (i, GBreak, x) :: rs, cont)
-        }
+        case (_, GFlat, Break(s)) :: rs     => 
+            format(width, col + String.length(s), rs, v1 -> 
+                cont(SText(s, v1)))
 
+        case (i, GBreak, Break(_)) :: rs    => 
+            format(width, i, rs, v1 -> 
+                cont(SLine(i, v1)))
+                
+        case (i, _, Group(x)) :: rs         =>
+            if (fits(width - col, (i, GFlat, x) :: rs))
+                format(width, col, (i, GFlat, x) :: rs, cont)
+            else
+                format(width, col, (i, GBreak, x) :: rs, cont)
+    }
+
+    ///
+    /// Render `doc` to a String, pretty printed with a line width of `width`.
+    ///
     pub def render(lineWidth: Int32, doc: Doc): String =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
 
+    ///
+    /// Render `doc` to a StringBuilder, pretty printed with a line width of `width`.
+    ///
     pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
-
 
 
     ///
@@ -166,20 +189,19 @@ mod Text.PrettyPrint {
     /// If the input text contains newlines it will be assembled as a list of lines.
     ///
     pub def text(s: String): Doc = match String.lines(s) {
-        case Nil => Text("")
+        case Nil      => Text("")
         case x :: Nil => Text(x)
-        case xs => vcat(List.map(Text, xs))
+        case xs       => vcat(List.map(Text, xs))
     }
 
     ///
     /// This is 'char' in PPrint (Haskell).
     ///
-    pub def char(ch: Char): Doc = 
-        match ch {
-            case '\n' => breakWith(String.lineSeparator())
-            case '\r' => breakWith(String.lineSeparator())
-            case _ => Char.toString(ch) |> text
-        }
+    pub def char(ch: Char): Doc = match ch {
+        case '\n' => breakWith(String.lineSeparator())
+        case '\r' => breakWith(String.lineSeparator())
+        case _    => Char.toString(ch) |> text
+    }
 
     ///
     /// `nest` renders the document `doc` with the current indentation level 
@@ -187,8 +209,6 @@ mod Text.PrettyPrint {
     ///
     pub def nest(i: Int32, doc: Doc): Doc = Nest(i, doc)
 
-    
-    
     ///
     /// `break`
     ///
@@ -247,8 +267,6 @@ mod Text.PrettyPrint {
     pub def hang(n: Int32, d: Doc): Doc =
         group(nest(n, d))
 
-
-
     ///
     /// Concatenate two documents separating with `linebreak`.
     /// This is (<$$>) in PPrint (Haskell).
@@ -265,54 +283,61 @@ mod Text.PrettyPrint {
     // ************************************************************************
     // List concatenation 
 
+    ///
+    /// Fold a list of documents using the operator `op`.
+    ///
     pub def foldDocs(op: (Doc, Doc) -> Doc, docs: List[Doc]): Doc = 
+        def loop(acc, xs, k) = match xs {
+            case Nil     => k(acc)
+            case x :: rs => loop(op(acc, x), rs, k)
+        };
         match docs {
-            case Nil => empty()
-            case x :: rs => foldDocsHelper(op, x, rs, identity)
+            case Nil     => empty()
+            case x :: rs => loop(x, rs, identity)
         }
-
-    def foldDocsHelper(op: (Doc, Doc) -> Doc, acc: Doc, docs:List[Doc], cont: Doc -> Doc): Doc = 
-        match docs {
-            case Nil => cont(acc)
-            case x :: rs => foldDocsHelper(op, op(acc,x), rs, cont)
-        }
-
-    pub def punctuate(sep: Doc, docs:List[Doc]): List[Doc] = punctuateHelper(sep, docs, xs -> xs)
-
-
-    pub def punctuateHelper(sep: Doc, ds:List[Doc], k: List[Doc] -> List[Doc]): List[Doc] = match ds {
-        case Nil => k(Nil)
-        case d :: Nil => k(d :: Nil)
-        case d :: rs    => punctuateHelper(sep, rs, xs -> k((d <> sep) :: xs))
-    }
-
-    pub def sep(docs: List[Doc]): Doc = foldDocs(x -> y -> x <!> y, docs)
-
-    pub def intersperse(sepa: Doc, docs:List[Doc]): Doc = sep(punctuate(sepa, docs))
 
     ///
-    /// Punctuate the list of documents with the separator `sep` and bookend them 
+    /// Punctuate the list of documents with the separator `sepd`. 
+    /// Return the results as a list.
+    ///
+    pub def punctuate(sepd: Doc, docs:List[Doc]): List[Doc] = 
+        def loop(xs, k) = match xs {
+            case Nil      => k(Nil)
+            case d :: Nil => k(d :: Nil)
+            case d :: rs  => loop(rs, ks -> k((d <> sepd) :: ks))
+        };
+        loop(docs, identity)
+
+    ///
+    /// Separate the list of documents with the separator `<!>`, concatenating 
+    /// the results together.
+    ///
+    pub def sep(docs: List[Doc]): Doc = 
+        foldDocs(x -> y -> x <!> y, docs)
+
+
+    ///
+    /// Punctuate the list of documents with the separator `sepd`, concatenating 
+    /// the results together.
+    ///
+    pub def intersperse(sepd: Doc, docs: List[Doc]): Doc = sep(punctuate(sepd, docs))
+
+    ///
+    /// Punctuate the list of documents with the separator `sepd` and bookend them 
     /// with `left` and `right`.
     ///
-    pub def encloseSep(left: Doc, right: Doc, sep: Doc, docs: List[Doc]): Doc = 
-        encloseSepHelper(sep, docs, left, d -> d <> right)
+    pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = 
+        def loop(xs, acc, k) = match xs {
+            case Nil        => k(acc)
+            case x :: Nil   => {let acc1 = acc <!> x; k(acc1)}
+            case x :: rs    => {let acc1 = acc <!> x <> sepd; loop(rs, acc1, k)}
+        };
+        loop(docs, left, d -> d <> right)
 
     ///
     /// Helper function for `encloseSep`.
     ///
-    def encloseSepHelper(sep: Doc, docs: List[Doc], acc: Doc, cont: Doc -> Doc): Doc = 
-        match docs {
-            case Nil => cont(acc)
-            case x :: Nil => {
-                let acc1 = acc <!> x;
-                cont(acc1)
-            }
-            case x :: rs => {
-                let acc1 = acc <!> x <> sep;
-                encloseSepHelper(sep, rs, acc1, cont)
-            }
-        }
-
+    
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...)
