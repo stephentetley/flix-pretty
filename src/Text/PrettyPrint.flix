@@ -246,7 +246,8 @@ mod Text.PrettyPrint {
 
 
     ///
-    /// Concatenate two documents with a soft line.
+    /// Concatenate two documents with a soft line. The documents will be rendered
+    /// with a space between if they fit on the same line, or underneath each other.
     /// This is (</>) in PPrint (Haskell).
     ///
     pub def besideSoftline(x: Doc, y: Doc): Doc = match (x, y) {
@@ -256,7 +257,8 @@ mod Text.PrettyPrint {
     }        
     
     ///
-    /// Concatenate two documents with a soft line.
+    /// Concatenate two documents with a soft line. The documents will be rendered
+    /// with a space between if they fit on the same line, or underneath each other.
     /// This is (</>) in PPrint (Haskell).
     ///
     pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)

@@ -79,5 +79,23 @@ mod TestPrettyPrint {
         let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
         List.map(ToString.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
 
+    /////////////////////////////////////////////////////////////////////////////
+    // besideSoftline                                                          //
+    /////////////////////////////////////////////////////////////////////////////
 
+    @test
+    pub def besideSoftline01(): Bool =
+        use Text.PrettyPrint.{besideSoftline, text};
+        let doc1 = besideSoftline(besideSoftline(text("abc"), text(",")), text("def"));
+        ToString.toString(doc1) == "abc , def"
+
+    /////////////////////////////////////////////////////////////////////////////
+    // symAmpersandAmpersand                                                   //
+    /////////////////////////////////////////////////////////////////////////////
+
+    @test
+    pub def symAmpersandAmpersand01(): Bool =
+        use Text.PrettyPrint.{<&&>, text};
+        let doc1 = text("abc") <&&> text(",") <&&> text("def");
+        String.lines(ToString.toString(doc1)) == "abc" :: "," :: "def" :: Nil
 }
