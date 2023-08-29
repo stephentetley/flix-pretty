@@ -1,3 +1,6 @@
+### v0.3.2
+   Updated to use the renamed `Files` module in the standard library.
+
 ### v0.3.1
    Improved `besideSoftLine` doc and added test.
 

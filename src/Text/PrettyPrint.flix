@@ -171,7 +171,7 @@ mod Text.PrettyPrint {
     ///
     pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
         let str = render(width, doc);
-        File.write(path, str)
+        Files.write(path, str)
 
 
     ///
