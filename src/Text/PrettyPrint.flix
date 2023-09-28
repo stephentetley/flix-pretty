@@ -169,7 +169,7 @@ mod Text.PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
+    pub def writePretty(path: String, width: Int32, doc: Doc): Result[IOError, Bool] \ IO =
         let str = render(width, doc);
         Files.write(path, str)
 
