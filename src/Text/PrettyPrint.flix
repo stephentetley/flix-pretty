@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-/// ## Acknowledgment
+/// # Acknowledgment
 ///
 /// This is an implementation of Christian Lindig's Strictly Pretty.
+/// https://lindig.github.io/papers/strictly-pretty-2000.pdf
 ///
-/// The original Haskell library was strictified for Mercury by Ralph Becket
-/// and subsequently ported to Racket by David Herman. This library derives 
-/// from both the Haskell library and Racket one.
-
 
 mod Text.PrettyPrint {
 
