@@ -1,4 +1,6 @@
-### vn.n.n
+
+### v0.4.0
+   Added `Pretty` trait.
    Updated acknowledgement in `PrettyPrint.flix`.
 
 ### v0.3.3
