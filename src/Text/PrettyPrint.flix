@@ -428,6 +428,11 @@ mod Text.PrettyPrint {
     ///
     pub def bigInt(i: BigInt): Doc = BigInt.toString(i) |> text
 
+    ///
+    /// Print an BigDecimal literal.
+    ///
+    pub def bigDecimal(d: BigDecimal): Doc = ToString.toString(d) |> text
+
     pub def repeatString(s: String, n: Int32): Doc = 
         String.repeat(n, s) |> text
 
@@ -566,6 +571,31 @@ mod Text.PrettyPrint {
     ///
     /// Enclose in parentheses if `b` is true.
     ///
-    pub def maybeParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
+    pub def optionalParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
+
+    ///
+    /// Enclose in brackets if `b` is true.
+    ///
+    pub def optionalBrackets(b: Bool, x: Doc): Doc = if (b) brackets(x) else x
+
+    ///
+    /// Enclose in angles if `b` is true.
+    ///
+    pub def optionalAngles(b: Bool, x: Doc): Doc = if (b) angles(x) else x
+
+    ///
+    /// Enclose in braces if `b` is true.
+    ///
+    pub def optionalBraces(b: Bool, x: Doc): Doc = if (b) braces(x) else x
+
+    ///
+    /// Enclose in single quotes if `b` is true.
+    ///
+    pub def optionalSquotes(b: Bool, x: Doc): Doc = if (b) squotes(x) else x
+
+    ///
+    /// Enclose in double quotes if `b` is true.
+    ///
+    pub def optionalDquotes(b: Bool, x: Doc): Doc = if (b) dquotes(x) else x
 
 }

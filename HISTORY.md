@@ -2,6 +2,7 @@
 ### v0.4.0
    Added `Pretty` trait.
    Updated acknowledgement in `PrettyPrint.flix`.
+   `maybeParens` renamed `optionalParens` and added `optionalBraces` etc.
 
 ### v0.3.3
    Updated to handle changes to `Files` module in the standard library (`IOError`).
