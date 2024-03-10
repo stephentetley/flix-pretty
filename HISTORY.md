@@ -1,4 +1,7 @@
 
+### v0.4.1
+   Updated to use `StringBuilder.empty()`
+
 ### v0.4.0
    Added `Pretty` trait.
    Updated acknowledgement in `PrettyPrint.flix`.

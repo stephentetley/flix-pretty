@@ -67,7 +67,7 @@ mod Text.PrettyPrint {
     /// Render the SDoc `source` to a String.
     ///
     pub def sdocToString(source: SDoc): String = region rc {
-        let sb = StringBuilder.new(rc);
+        let sb = StringBuilder.empty(rc);
         sdocWorker(sb, source, identity);
         StringBuilder.toString(sb)
     }
