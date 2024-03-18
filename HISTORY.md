@@ -1,4 +1,8 @@
 
+### v0.5.0
+   Removed horizontal concat without space operator `<>`, use `+` instead.
+   Added `Doc` instance of `Add` trait so we can use the `+` operator.
+
 ### v0.4.1
    Updated to use `StringBuilder.empty()`
 
