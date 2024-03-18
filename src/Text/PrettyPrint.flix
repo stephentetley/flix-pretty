@@ -229,12 +229,12 @@ mod Text.PrettyPrint {
     ///
     /// Concatenate two documents horizontally (no separating space).
     ///
-    pub def <>(x: Doc, y: Doc): Doc = beside(x,y)
+    pub def <=>(x: Doc, y: Doc): Doc = beside(x,y)
 
     ///
     /// Concatenate two documents horizontally with a separating space.
     ///
-    pub def besideSpace(x: Doc, y: Doc): Doc = x <> char(' ') <> y
+    pub def besideSpace(x: Doc, y: Doc): Doc = x <=> char(' ') <=> y
 
     ///
     /// Concatenate two documents horizontally with a separating space.
@@ -250,7 +250,7 @@ mod Text.PrettyPrint {
     pub def besideSoftline(x: Doc, y: Doc): Doc = match (x, y) {
         case (Empty, _) => y
         case (_, Empty) => x
-        case (_, _) => x <> break() <> y
+        case (_, _) => x <=> break() <=> y
     }        
     
     ///
@@ -273,11 +273,11 @@ mod Text.PrettyPrint {
     pub def <&>(x: Doc, y: Doc): Doc = match (x, y) { 
         case (Empty, _) => y
         case (_, Empty) => x
-        case (_, _) => x <> breakWith(String.lineSeparator()) <> y
+        case (_, _) => x <=> breakWith(String.lineSeparator()) <=> y
     }
 
     /// TODO - to investigate... this is not working as expected inside a `hang`.
-    pub def <&&>(x: Doc, y: Doc): Doc = x <> breakWith(String.lineSeparator()) <> y
+    pub def <&&>(x: Doc, y: Doc): Doc = x <=> breakWith(String.lineSeparator()) <=> y
 
     // ************************************************************************
     // List concatenation 
@@ -303,7 +303,7 @@ mod Text.PrettyPrint {
         def loop(xs, k) = match xs {
             case Nil      => k(Nil)
             case d :: Nil => k(d :: Nil)
-            case d :: rs  => loop(rs, ks -> k((d <> sepd) :: ks))
+            case d :: rs  => loop(rs, ks -> k((d <=> sepd) :: ks))
         };
         loop(docs, identity)
 
@@ -329,9 +329,9 @@ mod Text.PrettyPrint {
         def loop(xs, acc, k) = match xs {
             case Nil        => k(acc)
             case x :: Nil   => {let acc1 = acc <!> x; k(acc1)}
-            case x :: rs    => {let acc1 = acc <!> x <> sepd; loop(rs, acc1, k)}
+            case x :: rs    => {let acc1 = acc <!> x <=> sepd; loop(rs, acc1, k)}
         };
-        loop(docs, left, d -> d <> right)
+        loop(docs, left, d -> d <=> right)
 
     ///
     /// Helper function for `encloseSep`.
@@ -376,7 +376,7 @@ mod Text.PrettyPrint {
     ///
     /// Concatenate documents horizontally (no space).
     ///
-    pub def hcat(docs: List[Doc]): Doc= foldDocs((x,y) -> x <> y, docs)
+    pub def hcat(docs: List[Doc]): Doc= foldDocs((x,y) -> x <=> y, docs)
 
     ///
     /// Separate documents with (<&>)
@@ -391,7 +391,7 @@ mod Text.PrettyPrint {
     ///
     /// Indent the document `doc` with `i` spaces.
     ///
-    pub def indent(i: Int32, doc: Doc): Doc = repeatString(" ", i) <> nest(i,  doc)
+    pub def indent(i: Int32, doc: Doc): Doc = repeatString(" ", i) <=> nest(i,  doc)
 
     ///
     /// Print an Int8 literal.
@@ -535,7 +535,7 @@ mod Text.PrettyPrint {
     ///
     /// Enclose the document body between `l` (left) and `r` (right).
     ///
-    pub def enclose(l: Doc, r: Doc, body: Doc): Doc = l <> body <> r
+    pub def enclose(l: Doc, r: Doc, body: Doc): Doc = l <=> body <=> r
 
     ///
     /// Enclose in single quotes '...'
