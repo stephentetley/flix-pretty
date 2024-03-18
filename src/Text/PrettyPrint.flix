@@ -31,14 +31,14 @@ mod Text.PrettyPrint {
         SEmpty, SText, SLine
     }
     use Text.PrettyPrint.GroupMode
-    use Text.PrettyPrint.GroupMode.{
+    use Text.PrettyPrint.GroupMode.{ 
         GFlat, GBreak
     }
 
-    ///
+    /// 
     /// The document datatype.
     /// Constructors should not be used directly.
-    ///
+    /// 
     pub enum Doc {
         case Empty
         case Cat(Doc, Doc)
@@ -48,22 +48,22 @@ mod Text.PrettyPrint {
         case Break(String)
         case Group(Doc)
     }
-
+    
     instance ToString[Doc] {
         pub def toString(d: Doc): String = render(80, d)
     }
 
-    ///
+    /// 
     /// The simplified intermedaite document datatype.
     /// Constructors should not be used directly.
-    ///
-    pub enum SDoc {
+    /// 
+    pub enum SDoc { 
         case SEmpty
         case SText(String, SDoc)
         case SLine(Int32, SDoc)
     }
 
-    ///
+    /// 
     /// Render the SDoc `source` to a String.
     ///
     pub def sdocToString(source: SDoc): String = region rc {
@@ -73,15 +73,15 @@ mod Text.PrettyPrint {
     }
 
 
-    ///
+    /// 
     /// Helper function for `sdocToString`.
     ///
-    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, k: Unit -> Unit): Unit \ r =
+    def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, k: Unit -> Unit): Unit \ r = 
         use StringBuilder.{appendString!, appendLineSeparator!};
         match sdoc {
             case SEmpty      => k()
             case SText(s, d) => {
-                appendString!(s, sb);
+                appendString!(s, sb);  
                 sdocWorker(sb, d, k)
             }
             case SLine(i, d) => {
@@ -89,10 +89,10 @@ mod Text.PrettyPrint {
                 appendLineSeparator!(sb);
                 appendString!(prefix, sb);
                 sdocWorker(sb, d, k)
-            }
+            }          
         }
 
-    enum GroupMode {
+    enum GroupMode { 
         case GFlat
         case GBreak
     }
@@ -100,11 +100,11 @@ mod Text.PrettyPrint {
 
     type alias Format1 = (Int32, GroupMode, Doc)
 
-    ///
+    /// 
     /// Helper function for `format`.
     ///
     def fits(width: Int32, xs: List[Format1]): Bool = match xs {
-        case _ if (width < 0)           => false
+        case _ if (width < 0)           => false 
         case Nil                        => true
         case (_, _, Empty) :: rs        => fits(width, rs)
         case (i, m, Cat(x, y)) :: rs    => fits(width, (i, m, x) :: (i, m, y) :: rs)
@@ -116,31 +116,31 @@ mod Text.PrettyPrint {
         case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
     }
 
-    ///
+    /// 
     /// Render a list of intermediate `Format1` documents to an SDoc.
-    ///
+    ///    
     def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc = match xs {
         case  Nil                           => cont(SEmpty)
         case (_ ,_ , Empty) :: rs           => format(width, col, rs, cont)
         case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
         case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs, cont)
 
-        case (_, _, Text(s)) :: rs          =>
-            format(width, col + String.length(s), rs, v1 ->
+        case (_, _, Text(s)) :: rs          => 
+            format(width, col + String.length(s), rs, v1 -> 
                 cont(SText(s, v1)))
 
-        case (_, _, Char(c)) :: rs          =>
-            format(width, col + 1, rs, v1 ->
+        case (_, _, Char(c)) :: rs          => 
+            format(width, col + 1, rs, v1 -> 
                 cont(SText(ToString.toString(c), v1)))
 
-        case (_, GFlat, Break(s)) :: rs     =>
-            format(width, col + String.length(s), rs, v1 ->
+        case (_, GFlat, Break(s)) :: rs     => 
+            format(width, col + String.length(s), rs, v1 -> 
                 cont(SText(s, v1)))
 
-        case (i, GBreak, Break(_)) :: rs    =>
-            format(width, i, rs, v1 ->
+        case (i, GBreak, Break(_)) :: rs    => 
+            format(width, i, rs, v1 -> 
                 cont(SLine(i, v1)))
-
+                
         case (i, _, Group(x)) :: rs         =>
             if (fits(width - col, (i, GFlat, x) :: rs))
                 format(width, col, (i, GFlat, x) :: rs, cont)
@@ -159,7 +159,7 @@ mod Text.PrettyPrint {
     /// Render `doc` to a StringBuilder, pretty printed with a line width of `width`.
     ///
     pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
-        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1)
+        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
 
 
@@ -201,7 +201,7 @@ mod Text.PrettyPrint {
     }
 
     ///
-    /// `nest` renders the document `doc` with the current indentation level
+    /// `nest` renders the document `doc` with the current indentation level 
     /// increased by `i`
     ///
     pub def nest(i: Int32, doc: Doc): Doc = Nest(i, doc)
@@ -238,7 +238,7 @@ mod Text.PrettyPrint {
 
     ///
     /// Concatenate two documents horizontally with a separating space.
-    ///
+    /// 
     pub def <<>>(x: Doc, y:Doc): Doc = besideSpace(x,y)
 
 
@@ -251,8 +251,8 @@ mod Text.PrettyPrint {
         case (Empty, _) => y
         case (_, Empty) => x
         case (_, _) => x <=> break() <=> y
-    }
-
+    }        
+    
     ///
     /// Concatenate two documents with a soft line. The documents will be rendered
     /// with a space between if they fit on the same line, or underneath each other.
@@ -270,7 +270,7 @@ mod Text.PrettyPrint {
     /// Concatenate two documents separating with `linebreak`.
     /// This is (<$$>) in PPrint (Haskell).
     ///
-    pub def <&>(x: Doc, y: Doc): Doc = match (x, y) {
+    pub def <&>(x: Doc, y: Doc): Doc = match (x, y) { 
         case (Empty, _) => y
         case (_, Empty) => x
         case (_, _) => x <=> breakWith(String.lineSeparator()) <=> y
@@ -280,12 +280,12 @@ mod Text.PrettyPrint {
     pub def <&&>(x: Doc, y: Doc): Doc = x <=> breakWith(String.lineSeparator()) <=> y
 
     // ************************************************************************
-    // List concatenation
+    // List concatenation 
 
     ///
     /// Fold a list of documents using the operator `op`.
     ///
-    pub def foldDocs(op: (Doc, Doc) -> Doc, docs: List[Doc]): Doc =
+    pub def foldDocs(op: (Doc, Doc) -> Doc, docs: List[Doc]): Doc = 
         def loop(acc, xs, k) = match xs {
             case Nil     => k(acc)
             case x :: rs => loop(op(acc, x), rs, k)
@@ -296,10 +296,10 @@ mod Text.PrettyPrint {
         }
 
     ///
-    /// Punctuate the list of documents with the separator `sepd`.
+    /// Punctuate the list of documents with the separator `sepd`. 
     /// Return the results as a list.
     ///
-    pub def punctuate(sepd: Doc, docs:List[Doc]): List[Doc] =
+    pub def punctuate(sepd: Doc, docs:List[Doc]): List[Doc] = 
         def loop(xs, k) = match xs {
             case Nil      => k(Nil)
             case d :: Nil => k(d :: Nil)
@@ -308,24 +308,24 @@ mod Text.PrettyPrint {
         loop(docs, identity)
 
     ///
-    /// Separate the list of documents with the separator `<!>`, concatenating
+    /// Separate the list of documents with the separator `<!>`, concatenating 
     /// the results together.
     ///
-    pub def sep(docs: List[Doc]): Doc =
+    pub def sep(docs: List[Doc]): Doc = 
         foldDocs(x -> y -> x <!> y, docs)
 
 
     ///
-    /// Punctuate the list of documents with the separator `sepd`, concatenating
+    /// Punctuate the list of documents with the separator `sepd`, concatenating 
     /// the results together.
     ///
     pub def intersperse(sepd: Doc, docs: List[Doc]): Doc = sep(punctuate(sepd, docs))
 
     ///
-    /// Punctuate the list of documents with the separator `sepd` and bookend them
+    /// Punctuate the list of documents with the separator `sepd` and bookend them 
     /// with `left` and `right`.
     ///
-    pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc =
+    pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = 
         def loop(xs, acc, k) = match xs {
             case Nil        => k(acc)
             case x :: Nil   => {let acc1 = acc <!> x; k(acc1)}
@@ -336,7 +336,7 @@ mod Text.PrettyPrint {
     ///
     /// Helper function for `encloseSep`.
     ///
-
+    
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...)
@@ -433,10 +433,10 @@ mod Text.PrettyPrint {
     ///
     pub def bigDecimal(d: BigDecimal): Doc = ToString.toString(d) |> text
 
-    pub def repeatString(s: String, n: Int32): Doc =
+    pub def repeatString(s: String, n: Int32): Doc = 
         String.repeat(n, s) |> text
 
-    pub def repeat(d: Doc, n: Int32): Doc =
+    pub def repeat(d: Doc, n: Int32): Doc = 
         List.repeat(n, d) |> hcat
 
     // ************************************************************************
@@ -466,17 +466,17 @@ mod Text.PrettyPrint {
     /// Single left brace: '{'
     ///
     pub def lbrace(): Doc = char('{')
-
+    
     ///
     /// Single right brace: '}'
     ///
     pub def rbrace(): Doc= char('}')
-
+    
     ///
     /// Single left square bracket: '['
     ///
     pub def lbracket(): Doc = char('[')
-
+    
     ///
     /// Single right square bracket: ']'
     ///
@@ -541,32 +541,32 @@ mod Text.PrettyPrint {
     /// Enclose in single quotes '...'
     ///
     pub def squotes(x: Doc): Doc = enclose(squote(), squote(), x)
-
+    
     ///
     /// Enclose in double quotes "..."
     ///
     pub def dquotes(x: Doc): Doc = enclose(dquote(), dquote(), x)
-
+    
     ///
     /// Enclose in angle braces {...}
     ///
     pub def braces(x: Doc): Doc = enclose(lbrace(), rbrace(), x)
-
+    
     ///
     /// Enclose in parentheses (...)
     ///
     pub def parens(x: Doc): Doc = enclose(lparen(), rparen(), x)
-
+    
     ///
     /// Enclose in angle brackets <...>
     ///
     pub def angles(x: Doc): Doc = enclose(langle(), rangle(), x)
-
+    
     ///
     /// Enclose in square brackets [...]
     ///
     pub def brackets (x: Doc): Doc = enclose(lbracket(), rbracket(), x)
-
+    
 
     ///
     /// Enclose in parentheses if `b` is true.
