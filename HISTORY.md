@@ -1,7 +1,13 @@
+### v0.7.0
+   Added `isEmpty` introspective function.
+   Renamed conditional functions e.g. `optionalParens` becomes `conditionalParens`.
+   Added introspective functions that use the `optional` prefix e.g. `optionalParens` only prints parens if the body is not empty.
+   Fixed `encloseSep` so it does not print an initial space after the left opening.
+
 ### v0.6.0
    Added `besideSoftSpace` and its operator `<^>`.
    Changed capitalization `besideSoftline` to `besideSoftLine`.
-   Added `SemiGroup` and `Moniod` instance. The `Add` instance may be removed in future .
+   Added `SemiGroup` and `Moniod` instance. The `Add` instance may be removed in future.
 
 ### v0.5.0
    Removed horizontal concat without space operator `<>`, use `+` instead.

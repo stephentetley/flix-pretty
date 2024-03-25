@@ -23,7 +23,7 @@
 mod Text {
 
     use Text.PrettyPrint.Doc
-    use Text.PrettyPrint.{<<>>, encloseSep, text, comma, lparen, rparen, optionalParens}
+    use Text.PrettyPrint.{<<>>, encloseSep, text, comma, lparen, rparen, conditionalParens}
 
     use Text.PrettyLevel.{PrettyLevel}
 
@@ -118,7 +118,7 @@ mod Text {
     instance Pretty[Option[a]] with Pretty[a] {
         pub override def pPrintPrec(l: PrettyLevel, p: Int32, x: Option[a]): Doc = match x {
             case None     => text("None")
-            case Some(x1) => optionalParens(p > appPrec(), text("Some") <<>> Pretty.pPrintPrec(l, appPrec() + 1, x1))
+            case Some(x1) => conditionalParens(p > appPrec(), text("Some") <<>> Pretty.pPrintPrec(l, appPrec() + 1, x1))
         }
     }
 

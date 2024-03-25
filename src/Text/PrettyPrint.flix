@@ -243,7 +243,7 @@ mod Text.PrettyPrint {
     ///
     /// Concatenate two documents horizontally with a separating space.
     ///
-    pub def besideSpace(x: Doc, y: Doc): Doc = x + char(' ') + y
+    pub def besideSpace(x: Doc, y: Doc): Doc = x ++ char(' ') ++ y
 
     ///
     /// Concatenate two documents horizontally with a separating space.
@@ -259,7 +259,7 @@ mod Text.PrettyPrint {
     pub def besideSoftLine(x: Doc, y: Doc): Doc = match (x, y) {
         case (Empty, _) => y
         case (_, Empty) => x
-        case (_, _) => x + break() + y
+        case (_, _) => x ++ break() ++ y
     }
 
 
@@ -271,12 +271,14 @@ mod Text.PrettyPrint {
     pub def besideSoftSpace(x: Doc, y: Doc): Doc = match (x, y) {
         case (Empty, _) => y
         case (_, Empty) => x
-        case (_, _) => x + char(' ') + y
+        case (_, _) => x ++ char(' ') ++ y
     }
 
     ///
     /// Concatenate two documents with a soft line. The documents will be rendered
     /// with a space between if they fit on the same line, or underneath each other.
+    /// Empty documents are coalesced.
+    ///
     /// This is (</>) in PPrint (Haskell).
     ///
     pub def <!>(x: Doc, y: Doc): Doc = besideSoftLine(x, y)
@@ -300,11 +302,11 @@ mod Text.PrettyPrint {
     pub def <&>(x: Doc, y: Doc): Doc = match (x, y) { 
         case (Empty, _) => y
         case (_, Empty) => x
-        case (_, _) => x + breakWith(String.lineSeparator()) + y
+        case (_, _) => x ++ breakWith(String.lineSeparator()) ++ y
     }
 
     /// TODO - to investigate... this is not working as expected inside a `hang`.
-    pub def <&&>(x: Doc, y: Doc): Doc = x + breakWith(String.lineSeparator()) + y
+    pub def <&&>(x: Doc, y: Doc): Doc = x ++ breakWith(String.lineSeparator()) ++ y
 
     // ************************************************************************
     // List concatenation 
@@ -330,7 +332,7 @@ mod Text.PrettyPrint {
         def loop(xs, k) = match xs {
             case Nil      => k(Nil)
             case d :: Nil => k(d :: Nil)
-            case d :: rs  => loop(rs, ks -> k((d + sepd) :: ks))
+            case d :: rs  => loop(rs, ks -> k((d ++ sepd) :: ks))
         };
         loop(docs, identity)
 
@@ -338,8 +340,7 @@ mod Text.PrettyPrint {
     /// Separate the list of documents with the separator `<!>`, concatenating 
     /// the results together.
     ///
-    pub def sep(docs: List[Doc]): Doc = 
-        foldDocs(x -> y -> x <!> y, docs)
+    pub def sep(docs: List[Doc]): Doc = foldDocs(x -> y -> x <!> y, docs)
 
 
     ///
@@ -355,15 +356,13 @@ mod Text.PrettyPrint {
     pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = 
         def loop(xs, acc, k) = match xs {
             case Nil        => k(acc)
-            case x :: Nil   => {let acc1 = acc <!> x; k(acc1)}
-            case x :: rs    => {let acc1 = acc <!> x + sepd; loop(rs, acc1, k)}
+            case x :: rs    => {let acc1 = acc ++ sepd <!> x ; loop(rs, acc1, k)}
         };
-        loop(docs, left, d -> d + right)
-
-    ///
-    /// Helper function for `encloseSep`.
-    ///
-    
+        match docs {
+            case Nil => left ++ right
+            case d :: ds => loop(ds, left ++ d, d1 -> d1 ++ right)
+        }
+        
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...)
@@ -403,7 +402,7 @@ mod Text.PrettyPrint {
     ///
     /// Concatenate documents horizontally (no space).
     ///
-    pub def hcat(docs: List[Doc]): Doc= foldDocs((x,y) -> x + y, docs)
+    pub def hcat(docs: List[Doc]): Doc = foldDocs((x,y) -> x ++ y, docs)
 
     ///
     /// Separate documents with (<&>)
@@ -418,7 +417,7 @@ mod Text.PrettyPrint {
     ///
     /// Indent the document `doc` with `i` spaces.
     ///
-    pub def indent(i: Int32, doc: Doc): Doc = repeatString(" ", i) + nest(i,  doc)
+    pub def indent(i: Int32, doc: Doc): Doc = repeatString(" ", i) ++ nest(i,  doc)
 
     ///
     /// Print an Int8 literal.
@@ -562,7 +561,7 @@ mod Text.PrettyPrint {
     ///
     /// Enclose the document body between `l` (left) and `r` (right).
     ///
-    pub def enclose(l: Doc, r: Doc, body: Doc): Doc = l + body + r
+    pub def enclose(l: Doc, r: Doc, body: Doc): Doc = l ++ body ++ r
 
     ///
     /// Enclose in single quotes '...'
@@ -596,33 +595,134 @@ mod Text.PrettyPrint {
     
 
     ///
-    /// Enclose in parentheses if `b` is true.
+    /// Enclose in parentheses if the condition `b` is true.
     ///
-    pub def optionalParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
+    pub def conditionalParens(b: Bool, x: Doc): Doc = if (b) parens(x) else x
 
     ///
-    /// Enclose in brackets if `b` is true.
+    /// Enclose in brackets if the condition `b` is true.
     ///
-    pub def optionalBrackets(b: Bool, x: Doc): Doc = if (b) brackets(x) else x
+    pub def conditionalBrackets(b: Bool, x: Doc): Doc = if (b) brackets(x) else x
 
     ///
-    /// Enclose in angles if `b` is true.
+    /// Enclose in angles if the condition `b` is true.
     ///
-    pub def optionalAngles(b: Bool, x: Doc): Doc = if (b) angles(x) else x
+    pub def conditionalAngles(b: Bool, x: Doc): Doc = if (b) angles(x) else x
 
     ///
-    /// Enclose in braces if `b` is true.
+    /// Enclose in braces if the condition `b` is true.
     ///
-    pub def optionalBraces(b: Bool, x: Doc): Doc = if (b) braces(x) else x
+    pub def conditionalBraces(b: Bool, x: Doc): Doc = if (b) braces(x) else x
 
     ///
-    /// Enclose in single quotes if `b` is true.
+    /// Enclose in single quotes if the condition `b` is true.
     ///
-    pub def optionalSquotes(b: Bool, x: Doc): Doc = if (b) squotes(x) else x
+    pub def conditionalSquotes(b: Bool, x: Doc): Doc = if (b) squotes(x) else x
 
     ///
-    /// Enclose in double quotes if `b` is true.
+    /// Enclose in double quotes if the condition `b` is true.
     ///
-    pub def optionalDquotes(b: Bool, x: Doc): Doc = if (b) dquotes(x) else x
+    pub def conditionalDquotes(b: Bool, x: Doc): Doc = if (b) dquotes(x) else x
+
+    // ************************************************************************
+    // Introspection
+
+    ///
+    /// Test if document `d` is empty.
+    ///
+    pub def isEmpty(d: Doc): Bool = match d { 
+        case Empty => true
+        case _     => false
+    }
+
+    ///
+    /// Filter `xs` removing empty documents.
+    ///
+    pub def removeEmpties(xs: List[Doc]): List[Doc] = List.filter(x -> not isEmpty(x), xs)
+
+
+    ///
+    /// Enclose in parentheses if `d` is not empty.
+    ///
+    pub def optionalParens(d: Doc): Doc = if (isEmpty(d)) empty() else parens(d)
+
+    ///
+    /// Enclose in brackets if `d` is not empty.
+    ///
+    pub def optionalBrackets(d: Doc): Doc = if (isEmpty(d)) empty() else brackets(d)
+
+    ///
+    /// Enclose in angles if `d` is not empty.
+    ///
+    pub def optionalAngles(d: Doc): Doc = if (isEmpty(d)) empty() else angles(d)
+
+    ///
+    /// Enclose in braces if `d` is not empty.
+    ///
+    pub def optionalBraces(d: Doc): Doc = if (isEmpty(d)) empty() else braces(d)
+
+    ///
+    /// Enclose in single quotes if `d` is not empty.
+    ///
+    pub def optionalSquotes(d: Doc): Doc = if (isEmpty(d)) empty() else squotes(d)
+
+    ///
+    /// Enclose in double quotes if `d` is not empty.
+    ///
+    pub def optionalDquotes(d: Doc): Doc = if (isEmpty(d)) empty() else dquotes(d)
+
+
+    ///
+    /// Enclose the document `body` between `left` and `right` if `body` is not empty.
+    ///
+    pub def optionalEnclose(left: Doc, right: Doc, body: Doc): Doc = if (isEmpty(body)) empty() else left ++ body ++ right
+
+
+    ///
+    /// Punctuate the list of documents `docs` with the separator `sepd` and bookend them 
+    /// with `left` and `right`.
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalEncloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = match removeEmpties(docs) {
+        case Nil => empty()
+        case xs => encloseSep(left, right, sepd, xs)
+    }
+
+    ///
+    /// Enclose in parens and separate with comma (a,b,c,...).
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalTupled(docs: List[Doc]) : Doc = optionalEncloseSep(lparen(), rparen(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with comma [a,b,c,...]
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalCommaBrackets(docs: List[Doc]) : Doc = optionalEncloseSep(lbracket(), rbracket(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with comma {a,b,c,...}
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalCommaBraces(docs: List[Doc]) : Doc = optionalEncloseSep(lbrace(), rbrace(), comma(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi [a;b;c,...]
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalSemiBrackets(docs: List[Doc]) : Doc = optionalEncloseSep(lbracket(), rbracket(), semi(), docs)
+
+    ///
+    /// Enclose in parens and separate with semi {a;b;c,...}
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalSemiBraces(docs: List[Doc]) : Doc = optionalEncloseSep(lbrace(), rbrace(), semi(), docs)
+
 
 }
