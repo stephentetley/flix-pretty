@@ -80,14 +80,42 @@ mod TestPrettyPrint {
         List.map(ToString.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
 
     /////////////////////////////////////////////////////////////////////////////
-    // besideSoftline                                                          //
+    // besideSoftLine                                                          //
     /////////////////////////////////////////////////////////////////////////////
 
     @test
-    pub def besideSoftline01(): Bool =
-        use Text.PrettyPrint.{besideSoftline, text};
-        let doc1 = besideSoftline(besideSoftline(text("abc"), text(",")), text("def"));
+    pub def besideSoftLine01(): Bool =
+        use Text.PrettyPrint.{besideSoftLine, text};
+        let doc1 = besideSoftLine(besideSoftLine(text("abc"), text(",")), text("def"));
         ToString.toString(doc1) == "abc , def"
+
+    /////////////////////////////////////////////////////////////////////////////
+    // besideSoftSpace                                                         //
+    /////////////////////////////////////////////////////////////////////////////
+
+    @test
+    pub def besideSoftSpace01(): Bool =
+        use Text.PrettyPrint.{besideSoftSpace, parens, text};
+        let doc1 = parens(besideSoftSpace(text("hello"), text("world")));
+        ToString.toString(doc1) == "(hello world)"
+
+    @test
+    pub def besideSoftSpace02(): Bool =
+        use Text.PrettyPrint.{besideSoftSpace, parens, text, empty};
+        let doc1 = parens(besideSoftSpace(empty(), empty()));
+        ToString.toString(doc1) == "()"
+
+    @test
+    pub def besideSoftSpace03(): Bool =
+        use Text.PrettyPrint.{besideSoftSpace, parens, text, empty};
+        let doc1 = parens(besideSoftSpace(text("hello"), empty()));
+        ToString.toString(doc1) == "(hello)"
+
+    @test
+    pub def besideSoftSpace04(): Bool =
+        use Text.PrettyPrint.{besideSoftSpace, parens, text, empty};
+        let doc1 = parens(besideSoftSpace(empty(), text("world")));
+        ToString.toString(doc1) == "(world)"
 
     /////////////////////////////////////////////////////////////////////////////
     // symAmpersandAmpersand                                                   //

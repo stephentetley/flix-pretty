@@ -57,9 +57,16 @@ mod Text.PrettyPrint {
         pub def add(x: Doc, y: Doc): Doc = beside(x, y)
     }
 
+    instance SemiGroup[Doc] {
+        pub def combine(x: Doc, y: Doc): Doc = beside(x, y)
+    }
+
+    instance Monoid[Doc] {
+        pub def empty(): Doc = Empty
+    }
 
     /// 
-    /// The simplified intermedaite document datatype.
+    /// The simplified intermediate document datatype.
     /// Constructors should not be used directly.
     /// 
     pub enum SDoc { 
@@ -229,7 +236,7 @@ mod Text.PrettyPrint {
     ///
     /// Concatenate documents `x` and `y` horizontally (no separating space).
     ///
-    /// Use `+` from the `Add` trait for an operator version of this combinator.
+    /// Use `++` from the `SemiGroup` trait for an operator version of this combinator.
     ///
     pub def beside(x: Doc, y: Doc): Doc = Cat(x,y)
 
@@ -249,18 +256,36 @@ mod Text.PrettyPrint {
     /// with a space between if they fit on the same line, or underneath each other.
     /// This is (</>) in PPrint (Haskell).
     ///
-    pub def besideSoftline(x: Doc, y: Doc): Doc = match (x, y) {
+    pub def besideSoftLine(x: Doc, y: Doc): Doc = match (x, y) {
         case (Empty, _) => y
         case (_, Empty) => x
         case (_, _) => x + break() + y
-    }        
-    
+    }
+
+
+    ///
+    /// Concatenate two documents with a soft space. The documents will be rendered
+    /// with a space between if both are non-empty. If both are empty the result is empty.
+    /// If one document is empty and one is non-empty, the non-empty doc is printed.
+    ///
+    pub def besideSoftSpace(x: Doc, y: Doc): Doc = match (x, y) {
+        case (Empty, _) => y
+        case (_, Empty) => x
+        case (_, _) => x + char(' ') + y
+    }
+
     ///
     /// Concatenate two documents with a soft line. The documents will be rendered
     /// with a space between if they fit on the same line, or underneath each other.
     /// This is (</>) in PPrint (Haskell).
     ///
-    pub def <!>(x: Doc, y: Doc): Doc = besideSoftline(x, y)
+    pub def <!>(x: Doc, y: Doc): Doc = besideSoftLine(x, y)
+
+    ///
+    /// Concatenate two documents with a soft space. See `besideSoftSpace`.
+    ///
+    pub def <^>(x: Doc, y: Doc): Doc = besideSoftSpace(x, y)
+
 
     ///
     /// Group and nest document `d`.

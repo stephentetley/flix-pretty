@@ -1,3 +1,7 @@
+### v0.6.0
+   Added `besideSoftSpace` and its operator `<^>`.
+   Changed capitalization `besideSoftline` to `besideSoftLine`.
+   Added `SemiGroup` and `Moniod` instance. The `Add` instance may be removed in future .
 
 ### v0.5.0
    Removed horizontal concat without space operator `<>`, use `+` instead.
