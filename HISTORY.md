@@ -1,3 +1,6 @@
+### v0.8.0
+   Removed use of bang suffix for mutating functions.
+
 ### v0.7.0
    Added `isEmpty` introspective function.
    Renamed conditional functions e.g. `optionalParens` becomes `conditionalParens`.

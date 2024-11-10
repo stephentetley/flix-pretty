@@ -89,17 +89,17 @@ mod Text.PrettyPrint {
     /// Helper function for `sdocToString`.
     ///
     def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, k: Unit -> Unit): Unit \ r = 
-        use StringBuilder.{appendString!, appendLineSeparator!};
+        use StringBuilder.{appendString, appendLineSeparator};
         match sdoc {
             case SEmpty      => k()
             case SText(s, d) => {
-                appendString!(s, sb);  
+                appendString(s, sb);  
                 sdocWorker(sb, d, k)
             }
             case SLine(i, d) => {
                 let prefix = String.repeat(i, " ");
-                appendLineSeparator!(sb);
-                appendString!(prefix, sb);
+                appendLineSeparator(sb);
+                appendString(prefix, sb);
                 sdocWorker(sb, d, k)
             }          
         }
@@ -170,7 +170,7 @@ mod Text.PrettyPrint {
     ///
     /// Render `doc` to a StringBuilder, pretty printed with a line width of `width`.
     ///
-    pub def renderToStringBuilder!(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
+    pub def renderToStringBuilder(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
         format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
 
@@ -677,6 +677,16 @@ mod Text.PrettyPrint {
     ///
     pub def optionalEnclose(left: Doc, right: Doc, body: Doc): Doc = if (isEmpty(body)) empty() else left ++ body ++ right
 
+    ///
+    /// Punctuate the list of documents `docs` with the separator `sepd`.
+    ///
+    /// If the list `docs` is empty return the empty doc.
+    ///
+    pub def optionalIntersperse(sepd: Doc, docs: List[Doc]): Doc = match removeEmpties(docs) {
+        case Nil => empty()
+        case xs  => intersperse(sepd, xs)
+    }
+
 
     ///
     /// Punctuate the list of documents `docs` with the separator `sepd` and bookend them 
@@ -686,7 +696,7 @@ mod Text.PrettyPrint {
     ///
     pub def optionalEncloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = match removeEmpties(docs) {
         case Nil => empty()
-        case xs => encloseSep(left, right, sepd, xs)
+        case xs  => encloseSep(left, right, sepd, xs)
     }
 
     ///
