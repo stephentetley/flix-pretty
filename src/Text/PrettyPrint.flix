@@ -35,6 +35,14 @@ mod Text.PrettyPrint {
         GFlat, GBreak
     }
 
+    import java.lang.CharSequence
+    import java.io.IOException
+    import java.nio.charset.Charset
+    import java.nio.file.{Files => JFiles}
+    import java.nio.file.{Path => JPath}
+    import java.nio.file.StandardOpenOption
+    import java.nio.file.{OpenOption => JOpenOption}
+
     /// 
     /// The document datatype.
     /// Constructors should not be used directly.
@@ -178,9 +186,16 @@ mod Text.PrettyPrint {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(path: String, width: Int32, doc: Doc): Result[IOError, Bool] \ IO =
-        let str = render(width, doc);
-        Files.write(path, str)
+    pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
+        Result.tryCatch(_ -> {
+            let str = render(width, doc);
+            let path1 = unsafe JPath.of(path);
+            let cseq: CharSequence = checked_cast(str);
+            let opt = unsafe StandardOpenOption.CREATE;
+            let opt1: JOpenOption = checked_cast(opt);
+            let _ = JFiles.writeString(path1, cseq, ...{opt1});
+            true
+        })
 
 
     ///

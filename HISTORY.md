@@ -1,3 +1,6 @@
+### v0.9.0
+   Changed `writePretty` to use Java interop directly rather than `Files` which has been removed from Flix's stdlib.
+
 ### v0.8.0
    Removed use of bang suffix for mutating functions.
 
