@@ -1,3 +1,6 @@
+### v0.9.1
+   Changed `writePretty` to truncate files when writing to them.
+
 ### v0.9.0
    Changed `writePretty` to use Java interop directly rather than `Files` which has been removed from Flix's stdlib.
 

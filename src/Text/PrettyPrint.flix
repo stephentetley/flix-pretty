@@ -191,9 +191,11 @@ mod Text.PrettyPrint {
             let str = render(width, doc);
             let path1 = unsafe JPath.of(path);
             let cseq: CharSequence = checked_cast(str);
-            let opt = unsafe StandardOpenOption.CREATE;
-            let opt1: JOpenOption = checked_cast(opt);
-            let _ = JFiles.writeString(path1, cseq, ...{opt1});
+            let optC = unsafe StandardOpenOption.CREATE;
+            let optT = unsafe StandardOpenOption.TRUNCATE_EXISTING;
+            let optC1: JOpenOption = checked_cast(optC);
+            let optT1: JOpenOption = checked_cast(optT);
+            let _ = JFiles.writeString(path1, cseq, ...{optC1, optT1});
             true
         })
 
