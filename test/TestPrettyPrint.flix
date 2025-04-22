@@ -17,9 +17,9 @@
 
 mod TestPrettyPrint {
 
-
     use Text.PrettyPrint.{<&&>, besideSoftLine, besideSoftSpace, parens, text, 
-        empty, hsep, tupled, optionalTupled, removeEmpties, comma, punctuate}
+        empty, hsep, tupled, optionalTupled, removeEmpties, comma, punctuate,
+        writePretty}
 
     /////////////////////////////////////////////////////////////////////////////
     // empty                                                                   //
@@ -178,4 +178,19 @@ mod TestPrettyPrint {
         let doc1 = optionalTupled(List#{text("A"), empty(), text("B")});
         ToString.toString(doc1) == "(A, B)"
 
+
+    /////////////////////////////////////////////////////////////////////////////
+    // writePretty                                                             //
+    /////////////////////////////////////////////////////////////////////////////
+    @test
+    pub def writePretty01(): Bool \ IO =
+        let testFile = "test/testfile.txt";
+        let res = run {
+            FileWrite.write(str="XXXXXXXXXXXXXX", testFile);
+            let doc1 = text("hello");
+            discard writePretty(testFile, 120, doc1);
+            FileRead.read(testFile)
+        } with FileWrite.runWithIO
+            with FileRead.runWithIO;
+        res == Ok(Ok("hello"))
 }
