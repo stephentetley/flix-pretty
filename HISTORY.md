@@ -1,3 +1,7 @@
+### v0.9.2
+   Changes to `unsafe` to work with Flix 0.76.0. Thanks Magnus. 
+   Changes to variable names of in `Pretty` trait.
+
 ### v0.9.1
    Changed `writePretty` to truncate files when writing to them.
 

@@ -38,10 +38,10 @@ mod Text {
     pub trait Pretty[t] {
         pub def pPrint(x: t): Doc = Pretty.pPrintPrec(prettyNormal(), 1, x)
 
-        pub def pPrintPrec(_l: PrettyLevel, _i: Int32, x: t): Doc = Pretty.pPrint(x)
+        pub def pPrintPrec(_detail: PrettyLevel, _prec: Int32, x: t): Doc = Pretty.pPrint(x)
 
-        pub def pPrintList(l: PrettyLevel, xs: List[t]): Doc = 
-            encloseSep(text("List#{"), text("}"), text(", "), List.map(Pretty.pPrintPrec(l, 0), xs))
+        pub def pPrintList(detail: PrettyLevel, xs: List[t]): Doc =
+            encloseSep(text("List#{"), text("}"), text(", "), List.map(Pretty.pPrintPrec(detail, 0), xs))
     }
 
     def pPrint0(l: PrettyLevel, x: t): Doc with Pretty[t] = Pretty.pPrintPrec(l, 0, x)
