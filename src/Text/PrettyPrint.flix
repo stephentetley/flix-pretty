@@ -189,10 +189,10 @@ mod Text.PrettyPrint {
     pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
         Result.tryCatch(_ -> {
             let str = render(width, doc);
-            let path1 = unsafe JPath.of(path);
+            let path1 = unsafe IO { JPath.of(path) };
             let cseq: CharSequence = checked_cast(str);
-            let optC = unsafe StandardOpenOption.CREATE;
-            let optT = unsafe StandardOpenOption.TRUNCATE_EXISTING;
+            let optC = unsafe IO { StandardOpenOption.CREATE };
+            let optT = unsafe IO { StandardOpenOption.TRUNCATE_EXISTING };
             let optC1: JOpenOption = checked_cast(optC);
             let optT1: JOpenOption = checked_cast(optT);
             let _ = JFiles.writeString(path1, cseq, ...{optC1, optT1});
