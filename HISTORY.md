@@ -1,6 +1,9 @@
+### v0.9.3
+   Tests updated to use `Assert` effect. Thanks Magnus. 
+
 ### v0.9.2
-   Changes to `unsafe` to work with Flix 0.76.0. Thanks Magnus. 
-   Changes to variable names of in `Pretty` trait.
+   Changes to `unsafe` to work with Flix 0.67.0. Thanks Magnus. 
+   Changes to variable names in the `Pretty` trait.
 
 ### v0.9.1
    Changed `writePretty` to truncate files when writing to them.
