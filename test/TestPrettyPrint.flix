@@ -25,165 +25,165 @@ mod TestPrettyPrint {
     // empty                                                                   //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    def empty01(): Bool = 
-        ToString.toString(empty()) == ""
+    @Test
+    def empty01(): Unit \ Assert =
+        Assert.assertEq(expected = "", ToString.toString(empty()))
 
     /////////////////////////////////////////////////////////////////////////////
     // text                                                                    //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    def text01(): Bool =
-        ToString.toString(text("")) == ""
+    @Test
+    def text01(): Unit \ Assert =
+        Assert.assertEq(expected = "", ToString.toString(text("")))
 
-    @test
-    def text02(): Bool =
-        ToString.toString(text("A")) == "A"
+    @Test
+    def text02(): Unit \ Assert =
+        Assert.assertEq(expected = "A", ToString.toString(text("A")))
 
-    @test
-    def text03(): Bool =
-        ToString.toString(text("AB")) == "AB"
+    @Test
+    def text03(): Unit \ Assert =
+        Assert.assertEq(expected = "AB", ToString.toString(text("AB")))
 
-    @test
-    def text04(): Bool =
-        ToString.toString(text("A B")) == "A B"
+    @Test
+    def text04(): Unit \ Assert =
+        Assert.assertEq(expected = "A B", ToString.toString(text("A B")))
 
     /////////////////////////////////////////////////////////////////////////////
     // Punctuate                                                               //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def punctuate01(): Bool =
+    @Test
+    pub def punctuate01(): Unit \ Assert =
         let ds = punctuate(comma(), Nil);
-        List.map(ToString.toString, ds) == Nil
+        Assert.assertEq(expected = Nil, List.map(ToString.toString, ds))
 
-    @test
-    pub def punctuate02(): Bool =
+    @Test
+    pub def punctuate02(): Unit \ Assert =
         let ds = punctuate(comma(), text("abc") :: Nil);
-        List.map(ToString.toString, ds) == "abc" :: Nil
+        Assert.assertEq(expected = "abc" :: Nil, List.map(ToString.toString, ds))
 
-    @test
-    pub def punctuate03(): Bool =
+    @Test
+    pub def punctuate03(): Unit \ Assert =
         use Text.PrettyPrint.{punctuate, comma, text};
         let ds = punctuate(comma(), text("abc") :: text("def") :: Nil);
-        List.map(ToString.toString, ds) == "abc," :: "def" :: Nil
+        Assert.assertEq(expected = "abc," :: "def" :: Nil, List.map(ToString.toString, ds))
 
-    @test
-    pub def punctuate04(): Bool =
+    @Test
+    pub def punctuate04(): Unit \ Assert =
         let ds = punctuate(comma(), text("abc") :: text("def") :: text("ghi") :: Nil);
-        List.map(ToString.toString, ds) == "abc," :: "def," :: "ghi" :: Nil
+        Assert.assertEq(expected = "abc," :: "def," :: "ghi" :: Nil, List.map(ToString.toString, ds))
 
     /////////////////////////////////////////////////////////////////////////////
     // besideSoftLine                                                          //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def besideSoftLine01(): Bool =
+    @Test
+    pub def besideSoftLine01(): Unit \ Assert =
         let doc1 = besideSoftLine(besideSoftLine(text("abc"), text(",")), text("def"));
-        ToString.toString(doc1) == "abc , def"
+        Assert.assertEq(expected = "abc , def", ToString.toString(doc1))
 
     /////////////////////////////////////////////////////////////////////////////
     // besideSoftSpace                                                         //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def besideSoftSpace01(): Bool =
+    @Test
+    pub def besideSoftSpace01(): Unit \ Assert =
         let doc1 = parens(besideSoftSpace(text("hello"), text("world")));
-        ToString.toString(doc1) == "(hello world)"
+        Assert.assertEq(expected = "(hello world)", ToString.toString(doc1))
 
-    @test
-    pub def besideSoftSpace02(): Bool =
+    @Test
+    pub def besideSoftSpace02(): Unit \ Assert =
         let doc1 = parens(besideSoftSpace(empty(), empty()));
-        ToString.toString(doc1) == "()"
+        Assert.assertEq(expected = "()", ToString.toString(doc1))
 
-    @test
-    pub def besideSoftSpace03(): Bool =
+    @Test
+    pub def besideSoftSpace03(): Unit \ Assert =
         let doc1 = parens(besideSoftSpace(text("hello"), empty()));
-        ToString.toString(doc1) == "(hello)"
+        Assert.assertEq(expected = "(hello)", ToString.toString(doc1))
 
-    @test
-    pub def besideSoftSpace04(): Bool =
+    @Test
+    pub def besideSoftSpace04(): Unit \ Assert =
         let doc1 = parens(besideSoftSpace(empty(), text("world")));
-        ToString.toString(doc1) == "(world)"
+        Assert.assertEq(expected = "(world)", ToString.toString(doc1))
 
     /////////////////////////////////////////////////////////////////////////////
     // symAmpersandAmpersand                                                   //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def symAmpersandAmpersand01(): Bool =
+    @Test
+    pub def symAmpersandAmpersand01(): Unit \ Assert =
         let doc1 = text("abc") <&&> text(",") <&&> text("def");
-        String.lines(ToString.toString(doc1)) == "abc" :: "," :: "def" :: Nil
+        Assert.assertEq(expected = "abc" :: "," :: "def" :: Nil, String.lines(ToString.toString(doc1)))
 
     /////////////////////////////////////////////////////////////////////////////
     // removeEmpties                                                           //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def removeEmpties01(): Bool =
+    @Test
+    pub def removeEmpties01(): Unit \ Assert =
         let doc1 = hsep(removeEmpties(List#{empty(), text("A"), empty()}));
-        ToString.toString(doc1) == "A"
+        Assert.assertEq(expected = "A", ToString.toString(doc1))
 
-    @test
-    pub def removeEmpties02(): Bool =
+    @Test
+    pub def removeEmpties02(): Unit \ Assert =
         let doc1 = hsep(removeEmpties(List#{empty(), text("A"), empty(), text("B")}));
-        ToString.toString(doc1) == "A B"
+        Assert.assertEq(expected = "A B", ToString.toString(doc1))
 
     /////////////////////////////////////////////////////////////////////////////
     // tupled                                                                  //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def tupled01(): Bool =
+    @Test
+    pub def tupled01(): Unit \ Assert =
         let doc1 = tupled(Nil);
-        ToString.toString(doc1) == "()"
+        Assert.assertEq(expected = "()", ToString.toString(doc1))
 
-    @test
-    pub def tupled02(): Bool =
+    @Test
+    pub def tupled02(): Unit \ Assert =
         let doc1 = tupled(List#{empty()});
-        ToString.toString(doc1) == "()"
+        Assert.assertEq(expected = "()", ToString.toString(doc1))
 
-    @test
-    pub def tupled03(): Bool =
+    @Test
+    pub def tupled03(): Unit \ Assert =
         let doc1 = tupled(List#{text("A"), text("B")});
-        ToString.toString(doc1) == "(A, B)"
+        Assert.assertEq(expected = "(A, B)", ToString.toString(doc1))
 
-    @test
-    pub def tupled04(): Bool =
+    @Test
+    pub def tupled04(): Unit \ Assert =
         let doc1 = tupled(List#{text("A"), empty()});
-        ToString.toString(doc1) == "(A,)"
+        Assert.assertEq(expected = "(A,)", ToString.toString(doc1))
 
     /////////////////////////////////////////////////////////////////////////////
     // optionalTupled                                                          //
     /////////////////////////////////////////////////////////////////////////////
 
-    @test
-    pub def optionalTupled01(): Bool =
+    @Test
+    pub def optionalTupled01(): Unit \ Assert =
         let doc1 = optionalTupled(Nil);
-        ToString.toString(doc1) == ""
+        Assert.assertEq(expected = "", ToString.toString(doc1))
 
-    @test
-    pub def optionalTupled02(): Bool =
+    @Test
+    pub def optionalTupled02(): Unit \ Assert =
         let doc1 = optionalTupled(List#{empty()});
-        ToString.toString(doc1) == ""
+        Assert.assertEq(expected = "", ToString.toString(doc1))
 
-    @test
-    pub def optionalTupled03(): Bool =
+    @Test
+    pub def optionalTupled03(): Unit \ Assert =
         let doc1 = optionalTupled(List#{text("A"), empty()});
-        ToString.toString(doc1) == "(A)"
+        Assert.assertEq(expected = "(A)", ToString.toString(doc1))
 
-    @test
-    pub def optionalTupled04(): Bool =
+    @Test
+    pub def optionalTupled04(): Unit \ Assert =
         let doc1 = optionalTupled(List#{text("A"), empty(), text("B")});
-        ToString.toString(doc1) == "(A, B)"
+        Assert.assertEq(expected = "(A, B)", ToString.toString(doc1))
 
 
     /////////////////////////////////////////////////////////////////////////////
     // writePretty                                                             //
     /////////////////////////////////////////////////////////////////////////////
-    @test
-    pub def writePretty01(): Bool \ IO =
+    @Test
+    pub def writePretty01(): Unit \ { IO, Assert } =
         let testFile = "test/testfile.txt";
         let res = run {
             FileWrite.write(str="XXXXXXXXXXXXXX", testFile);
@@ -192,5 +192,5 @@ mod TestPrettyPrint {
             FileRead.read(testFile)
         } with FileWrite.runWithIO
             with FileRead.runWithIO;
-        res == Ok(Ok("hello"))
+        Assert.assertEq(expected = Ok(Ok("hello")), res)
 }
