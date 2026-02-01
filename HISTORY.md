@@ -1,3 +1,7 @@
+### v0.10.0
+   Generalized functions that consumed `List` to work on sequences that
+   implement the `Iterable` trait. 
+
 ### v0.9.3
    Tests updated to use `Assert` effect. Thanks Magnus. 
 
@@ -9,7 +13,8 @@
    Changed `writePretty` to truncate files when writing to them.
 
 ### v0.9.0
-   Changed `writePretty` to use Java interop directly rather than `Files` which has been removed from Flix's stdlib.
+   Changed `writePretty` to use Java interop directly rather than `Files` 
+   which has been removed from Flix's stdlib.
 
 ### v0.8.0
    Removed use of bang suffix for mutating functions.

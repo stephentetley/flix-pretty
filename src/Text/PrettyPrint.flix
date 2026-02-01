@@ -326,110 +326,130 @@ mod Text.PrettyPrint {
     pub def <&&>(x: Doc, y: Doc): Doc = x ++ breakWith(String.lineSeparator()) ++ y
 
     // ************************************************************************
-    // List concatenation 
+    // List / Sequence concatenation 
 
     ///
     /// Fold a list of documents using the operator `op`.
     ///
-    pub def foldDocs(op: (Doc, Doc) -> Doc, docs: List[Doc]): Doc = 
-        def loop(acc, xs, k) = match xs {
-            case Nil     => k(acc)
-            case x :: rs => loop(op(acc, x), rs, k)
+    pub def foldDocs(op: (Doc, Doc) -> Doc, docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = region r {
+        let iter = Iterable.iterator(r, docs);
+        def loop(acc, k) = match Iterator.next(iter) {
+            case None       => k(acc)
+            case Some(x)    => loop(op(acc, x), k)
         };
-        match docs {
-            case Nil     => empty()
-            case x :: rs => loop(x, rs, identity)
+        match Iterator.next(iter) {
+            case None    => empty()
+            case Some(x) => loop(x, identity)
         }
+    }
 
     ///
-    /// Punctuate the list of documents with the separator `sepd`. 
+    /// Punctuate the iterable sequence of documents with the separator `sepd`. 
     /// Return the results as a list.
     ///
-    pub def punctuate(sepd: Doc, docs:List[Doc]): List[Doc] = 
-        def loop(xs, k) = match xs {
-            case Nil      => k(Nil)
-            case d :: Nil => k(d :: Nil)
-            case d :: rs  => loop(rs, ks -> k((d ++ sepd) :: ks))
+    pub def punctuate(sepd: Doc, docs: t): List[Doc] \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = region r {
+        let iter = Iterable.iterator(r, docs);
+        def loop(current, k) = match current {
+            case None       => k(Nil)
+            case Some(d)    => match Iterator.next(iter) {
+                case None   => k(d :: Nil)
+                case ans    => loop(ans, ks -> k((d ++ sepd) :: ks))
+            }
         };
-        loop(docs, identity)
+        let start = Iterator.next(iter);
+        loop(start, identity)
+    }
 
     ///
-    /// Separate the list of documents with the separator `<!>`, concatenating 
+    /// Separate the iterable sequence of documents with the separator `<!>`, concatenating 
     /// the results together.
     ///
-    pub def sep(docs: List[Doc]): Doc = foldDocs(x -> y -> x <!> y, docs)
+    pub def sep(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        foldDocs(x -> y -> x <!> y, docs)
 
 
     ///
-    /// Punctuate the list of documents with the separator `sepd`, concatenating 
+    /// Punctuate the iterable sequence of documents with the separator `sepd`, concatenating 
     /// the results together.
     ///
-    pub def intersperse(sepd: Doc, docs: List[Doc]): Doc = sep(punctuate(sepd, docs))
+    pub def intersperse(sepd: Doc, docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        sep(punctuate(sepd, docs))
 
     ///
     /// Punctuate the list of documents with the separator `sepd` and bookend them 
     /// with `left` and `right`.
     ///
-    pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = 
-        def loop(xs, acc, k) = match xs {
-            case Nil        => k(acc)
-            case x :: rs    => {let acc1 = acc ++ sepd <!> x ; loop(rs, acc1, k)}
+    pub def encloseSep(left: Doc, right: Doc, sepd: Doc, docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = region r {
+        let iter = Iterable.iterator(r, docs);
+        def loop(acc, k) = match Iterator.next(iter) {
+            case None       => k(acc)
+            case Some(x)    => {let acc1 = acc ++ sepd <!> x; loop(acc1, k)}
         };
-        match docs {
-            case Nil => left ++ right
-            case d :: ds => loop(ds, left ++ d, d1 -> d1 ++ right)
+        match Iterator.next(iter) {
+            case None    => left ++ right
+            case Some(d) => loop(left ++ d, kd -> kd ++ right)
         }
-        
+    }    
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...)
     ///
-    pub def tupled(docs: List[Doc]) : Doc = encloseSep(lparen(), rparen(), comma(), docs)
+    pub def tupled(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        encloseSep(lparen(), rparen(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with comma [a,b,c,...]
     ///
-    pub def commaBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), comma(), docs)
+    pub def commaBrackets(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        encloseSep(lbracket(), rbracket(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with comma {a,b,c,...}
     ///
-    pub def commaBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), comma(), docs)
+    pub def commaBraces(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        encloseSep(lbrace(), rbrace(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with semi [a;b;c,...]
     ///
-    pub def semiBrackets(docs: List[Doc]) : Doc = encloseSep(lbracket(), rbracket(), semi(), docs)
+    pub def semiBrackets(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc =
+        encloseSep(lbracket(), rbracket(), semi(), docs)
 
     ///
     /// Enclose in parens and separate with semi {a;b;c,...}
     ///
-    pub def semiBraces(docs: List[Doc]) : Doc = encloseSep(lbrace(), rbrace(), semi(), docs)
+    pub def semiBraces(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        encloseSep(lbrace(), rbrace(), semi(), docs)
 
     ///
     /// Separate documents horizontally with a space.
     ///
-    pub def hsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <<>> y, docs)
+    pub def hsep(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        foldDocs((x,y) -> x <<>> y, docs)
 
     /// ///
     /// /// Separate documents vertically with (<&>)
     /// ///
-    /// pub def vsep(docs: List[Doc]): Doc = foldDocs((x,y) -> x <&> y, docs)
+    /// pub def vsep(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+    ///    foldDocs((x,y) -> x <&> y, docs)
 
     ///
     /// Concatenate documents horizontally (no space).
     ///
-    pub def hcat(docs: List[Doc]): Doc = foldDocs((x,y) -> x ++ y, docs)
+    pub def hcat(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc =
+        foldDocs((x,y) -> x ++ y, docs)
 
     ///
     /// Separate documents with (<&>)
     ///
-    pub def vcat(docs: List[Doc]): Doc = foldDocs((x,y) -> x <&> y, docs)
+    pub def vcat(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        foldDocs((x,y) -> x <&> y, docs)
 
     ///
     /// Concat horizontally or vertically...
     ///
-    pub def cat(docs: List[Doc]): Doc = group(vcat(docs))
+    pub def cat(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        group(vcat(docs))
 
     ///
     /// Indent the document `doc` with `i` spaces.
@@ -654,9 +674,21 @@ mod Text.PrettyPrint {
 
     ///
     /// Filter `xs` removing empty documents.
+    /// Returns the result as a list.
     ///
-    pub def removeEmpties(xs: List[Doc]): List[Doc] = List.filter(x -> not isEmpty(x), xs)
-
+    pub def removeEmpties(docs: t): List[Doc] \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = region r {
+        let iter = Iterable.iterator(r, docs);
+        def loop(k) = match Iterator.next(iter) {
+            case None       => k(Nil)
+            case Some(d)    => 
+                if (isEmpty(d)) 
+                    loop(k) 
+                else {
+                    loop(ks -> k(d :: ks))
+                }
+        };
+        loop(identity)
+    }
 
     ///
     /// Enclose in parentheses if `d` is not empty.
@@ -695,61 +727,68 @@ mod Text.PrettyPrint {
     pub def optionalEnclose(left: Doc, right: Doc, body: Doc): Doc = if (isEmpty(body)) empty() else left ++ body ++ right
 
     ///
-    /// Punctuate the list of documents `docs` with the separator `sepd`.
+    /// Punctuate the iterable sequence of documents `docs` with the separator `sepd`.
     ///
     /// If the list `docs` is empty return the empty doc.
     ///
-    pub def optionalIntersperse(sepd: Doc, docs: List[Doc]): Doc = match removeEmpties(docs) {
-        case Nil => empty()
-        case xs  => intersperse(sepd, xs)
-    }
+    pub def optionalIntersperse(sepd: Doc, docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        match removeEmpties(docs) {
+            case Nil => empty()
+            case xs  => intersperse(sepd, xs)
+        }
 
 
     ///
-    /// Punctuate the list of documents `docs` with the separator `sepd` and bookend them 
+    /// Punctuate the iterable sequence of documents `docs` with the separator `sepd` and bookend them 
     /// with `left` and `right`.
     ///
     /// If the list `docs` is empty return the empty doc.
     ///
-    pub def optionalEncloseSep(left: Doc, right: Doc, sepd: Doc, docs: List[Doc]): Doc = match removeEmpties(docs) {
-        case Nil => empty()
-        case xs  => encloseSep(left, right, sepd, xs)
-    }
+    pub def optionalEncloseSep(left: Doc, right: Doc, sepd: Doc, docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        match removeEmpties(docs) {
+            case Nil => empty()
+            case xs  => encloseSep(left, right, sepd, xs)
+        }
 
     ///
     /// Enclose in parens and separate with comma (a,b,c,...).
     ///
-    /// If the list `docs` is empty return the empty doc.
+    /// If the iterable sequence `docs` is empty return the empty doc.
     ///
-    pub def optionalTupled(docs: List[Doc]) : Doc = optionalEncloseSep(lparen(), rparen(), comma(), docs)
+    pub def optionalTupled(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        optionalEncloseSep(lparen(), rparen(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with comma [a,b,c,...]
     ///
-    /// If the list `docs` is empty return the empty doc.
+    /// If the iterable sequence `docs` is empty return the empty doc.
     ///
-    pub def optionalCommaBrackets(docs: List[Doc]) : Doc = optionalEncloseSep(lbracket(), rbracket(), comma(), docs)
+    pub def optionalCommaBrackets(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc = 
+        optionalEncloseSep(lbracket(), rbracket(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with comma {a,b,c,...}
     ///
-    /// If the list `docs` is empty return the empty doc.
+    /// If the iterable sequence `docs` is empty return the empty doc.
     ///
-    pub def optionalCommaBraces(docs: List[Doc]) : Doc = optionalEncloseSep(lbrace(), rbrace(), comma(), docs)
+    pub def optionalCommaBraces(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc =
+        optionalEncloseSep(lbrace(), rbrace(), comma(), docs)
 
     ///
     /// Enclose in parens and separate with semi [a;b;c,...]
     ///
-    /// If the list `docs` is empty return the empty doc.
+    /// If the iterable sequence `docs` is empty return the empty doc.
     ///
-    pub def optionalSemiBrackets(docs: List[Doc]) : Doc = optionalEncloseSep(lbracket(), rbracket(), semi(), docs)
+    pub def optionalSemiBrackets(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc =
+        optionalEncloseSep(lbracket(), rbracket(), semi(), docs)
 
     ///
     /// Enclose in parens and separate with semi {a;b;c,...}
     ///
-    /// If the list `docs` is empty return the empty doc.
+    /// If the iterable sequence `docs` is empty return the empty doc.
     ///
-    pub def optionalSemiBraces(docs: List[Doc]) : Doc = optionalEncloseSep(lbrace(), rbrace(), semi(), docs)
+    pub def optionalSemiBraces(docs: t): Doc \ Iterable.Aef[t] with Iterable[t] where Iterable.Elm[t] ~ Doc =
+        optionalEncloseSep(lbrace(), rbrace(), semi(), docs)
 
 
 }
