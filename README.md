@@ -4,7 +4,7 @@ A pretty print library for Flix.
 
 License: Apache 2.0
 
-Note - v0.11.0 changes the module names / namespace to `FlixPretty` 
+Note - v0.10.0 changes the module names / namespace to `FlixPretty` 
 the top level module and `FlixPretty.PrettyClass` the module 
 containing the `Pretty` class.
 

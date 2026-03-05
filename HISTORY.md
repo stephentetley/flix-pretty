@@ -1,8 +1,6 @@
-### v0.11.0
+### v0.10.0
    Namespace changes - the topLevel is now `FlixPretty` and the 
    Pretty class is in the child module `FlixPretty.PrettyClass`. 
-
-### v0.10.0
    Generalized functions that consumed `List` to work on sequences that
    implement the `Iterable` trait. 
 
