@@ -20,20 +20,9 @@
 /// https://lindig.github.io/papers/strictly-pretty-2000.pdf
 ///
 
-mod Text.PrettyPrint {
+pub mod FlixPretty {
 
-    use Text.PrettyPrint.Doc
-    use Text.PrettyPrint.Doc.{
-        Empty, Cat, Char, Text, Nest, Break, Group
-    }
-    use Text.PrettyPrint.SDoc
-    use Text.PrettyPrint.SDoc.{
-        SEmpty, SText, SLine
-    }
-    use Text.PrettyPrint.GroupMode
-    use Text.PrettyPrint.GroupMode.{ 
-        GFlat, GBreak
-    }
+
 
     import java.lang.CharSequence
     import java.io.IOException
@@ -70,7 +59,7 @@ mod Text.PrettyPrint {
     }
 
     instance Monoid[Doc] {
-        pub def empty(): Doc = Empty
+        pub def empty(): Doc = Doc.Empty
     }
 
     /// 
@@ -99,12 +88,12 @@ mod Text.PrettyPrint {
     def sdocWorker(sb: StringBuilder[r], sdoc: SDoc, k: Unit -> Unit): Unit \ r = 
         use StringBuilder.{appendString, appendLineSeparator};
         match sdoc {
-            case SEmpty      => k()
-            case SText(s, d) => {
+            case SDoc.SEmpty      => k()
+            case SDoc.SText(s, d) => {
                 appendString(s, sb);  
                 sdocWorker(sb, d, k)
             }
-            case SLine(i, d) => {
+            case SDoc.SLine(i, d) => {
                 let prefix = String.repeat(i, " ");
                 appendLineSeparator(sb);
                 appendString(prefix, sb);
@@ -124,62 +113,65 @@ mod Text.PrettyPrint {
     /// Helper function for `format`.
     ///
     def fits(width: Int32, xs: List[Format1]): Bool = match xs {
-        case _ if (width < 0)           => false 
-        case Nil                        => true
-        case (_, _, Empty) :: rs        => fits(width, rs)
-        case (i, m, Cat(x, y)) :: rs    => fits(width, (i, m, x) :: (i, m, y) :: rs)
-        case (i, m, Nest(j, x)) :: rs   => fits(width, (i + j, m, x) :: rs)
-        case (_, _, Text(s)) :: rs      => fits(width - String.length(s), rs)
-        case (_, _, Char(_)) :: rs      => fits(width - 1, rs)
-        case (_, GFlat, Break(s)) :: rs => fits(width - String.length(s), rs)
-        case (_, GBreak, Break(_)) :: _ => true    // Impossible
-        case (i, _, Group(x)) :: rs     => fits(width, (i, GFlat, x) :: rs)
+        case _ if (width < 0)                           => false 
+        case Nil                                        => true
+        case (_, _, Doc.Empty) :: rs                    => fits(width, rs)
+        case (i, m, Doc.Cat(x, y)) :: rs                => fits(width, (i, m, x) :: (i, m, y) :: rs)
+        case (i, m, Doc.Nest(j, x)) :: rs               => fits(width, (i + j, m, x) :: rs)
+        case (_, _, Doc.Text(s)) :: rs                  => fits(width - String.length(s), rs)
+        case (_, _, Doc.Char(_)) :: rs                  => fits(width - 1, rs)
+        case (_, GroupMode.GFlat, Doc.Break(s)) :: rs   => fits(width - String.length(s), rs)
+        case (_, GroupMode.GBreak, Doc.Break(_)) :: _   => true    // Impossible
+        case (i, _, Doc.Group(x)) :: rs                 => fits(width, (i, GroupMode.GFlat, x) :: rs)
     }
 
     /// 
     /// Render a list of intermediate `Format1` documents to an SDoc.
     ///    
     def format (width: Int32, col: Int32, xs: List[Format1], cont: SDoc -> SDoc): SDoc = match xs {
-        case  Nil                           => cont(SEmpty)
-        case (_ ,_ , Empty) :: rs           => format(width, col, rs, cont)
-        case (i, m, Cat(x, y)) :: rs        => format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
-        case (i, m, Nest(j, x)) :: rs       => format(width, col, (i+j, m, x) :: rs, cont)
+        case  Nil                                           => cont(SDoc.SEmpty)
+        case (_ ,_ , Doc.Empty) :: rs                       => format(width, col, rs, cont)
+        case (i, m, Doc.Cat(x, y)) :: rs                    => 
+            format(width, col, (i, m, x) :: (i, m, y) :: rs, cont)
 
-        case (_, _, Text(s)) :: rs          => 
+        case (i, m, Doc.Nest(j, x)) :: rs                   => 
+            format(width, col, (i+j, m, x) :: rs, cont)
+
+        case (_, _, Doc.Text(s)) :: rs                      => 
             format(width, col + String.length(s), rs, v1 -> 
-                cont(SText(s, v1)))
+                cont(SDoc.SText(s, v1)))
 
-        case (_, _, Char(c)) :: rs          => 
+        case (_, _, Doc.Char(c)) :: rs                      => 
             format(width, col + 1, rs, v1 -> 
-                cont(SText(ToString.toString(c), v1)))
+                cont(SDoc.SText(ToString.toString(c), v1)))
 
-        case (_, GFlat, Break(s)) :: rs     => 
+        case (_, GroupMode.GFlat, Doc.Break(s)) :: rs       => 
             format(width, col + String.length(s), rs, v1 -> 
-                cont(SText(s, v1)))
+                cont(SDoc.SText(s, v1)))
 
-        case (i, GBreak, Break(_)) :: rs    => 
+        case (i, GroupMode.GBreak, Doc.Break(_)) :: rs      => 
             format(width, i, rs, v1 -> 
-                cont(SLine(i, v1)))
+                cont(SDoc.SLine(i, v1)))
                 
-        case (i, _, Group(x)) :: rs         =>
-            if (fits(width - col, (i, GFlat, x) :: rs))
-                format(width, col, (i, GFlat, x) :: rs, cont)
+        case (i, _, Doc.Group(x)) :: rs                     =>
+            if (fits(width - col, (i, GroupMode.GFlat, x) :: rs))
+                format(width, col, (i, GroupMode.GFlat, x) :: rs, cont)
             else
-                format(width, col, (i, GBreak, x) :: rs, cont)
+                format(width, col, (i, GroupMode.GBreak, x) :: rs, cont)
     }
 
     ///
     /// Render `doc` to a String, pretty printed with a line width of `width`.
     ///
     pub def render(lineWidth: Int32, doc: Doc): String =
-        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
+        format(lineWidth, 0, (0, GroupMode.GFlat, doc) :: Nil, d1 -> d1) |> sdocToString
 
 
     ///
     /// Render `doc` to a StringBuilder, pretty printed with a line width of `width`.
     ///
     pub def renderToStringBuilder(sb: StringBuilder[r], lineWidth: Int32, doc: Doc): Unit \ r =
-        format(lineWidth, 0, (0, GFlat, doc) :: Nil, d1 -> d1) 
+        format(lineWidth, 0, (0, GroupMode.GFlat, doc) :: Nil, d1 -> d1) 
             |> sd1 -> sdocWorker(sb, sd1, d1 -> d1)
 
 
@@ -207,7 +199,7 @@ mod Text.PrettyPrint {
     ///
     /// Returns the empty document.
     ///
-    pub def empty(): Doc = Empty
+    pub def empty(): Doc = Doc.Empty
 
     ///
     /// Returns the document containing the literal string `s`.
@@ -215,9 +207,9 @@ mod Text.PrettyPrint {
     /// If the input text contains newlines it will be assembled as a list of lines.
     ///
     pub def text(s: String): Doc = match String.lines(s) {
-        case Nil      => Text("")
-        case x :: Nil => Text(x)
-        case xs       => vcat(List.map(Text, xs))
+        case Nil      => Doc.Text("")
+        case x :: Nil => Doc.Text(x)
+        case xs       => vcat(List.map(Doc.Text, xs))
     }
 
     ///
@@ -233,29 +225,29 @@ mod Text.PrettyPrint {
     /// `nest` renders the document `doc` with the current indentation level 
     /// increased by `i`
     ///
-    pub def nest(i: Int32, doc: Doc): Doc = Nest(i, doc)
+    pub def nest(i: Int32, doc: Doc): Doc = Doc.Nest(i, doc)
 
     ///
     /// `break`
     ///
-    pub def break(): Doc = Break(" ")
+    pub def break(): Doc = Doc.Break(" ")
 
     ///
     /// `breakWith`
     ///
-    pub def breakWith(s: String): Doc = Break(s)
+    pub def breakWith(s: String): Doc = Doc.Break(s)
 
     ///
     /// `group`
     ///
-    pub def group(d: Doc): Doc = Group(d)
+    pub def group(d: Doc): Doc = Doc.Group(d)
 
     ///
     /// Concatenate documents `x` and `y` horizontally (no separating space).
     ///
     /// Use `++` from the `SemiGroup` trait for an operator version of this combinator.
     ///
-    pub def beside(x: Doc, y: Doc): Doc = Cat(x,y)
+    pub def beside(x: Doc, y: Doc): Doc = Doc.Cat(x,y)
 
     ///
     /// Concatenate two documents horizontally with a separating space.
@@ -274,9 +266,9 @@ mod Text.PrettyPrint {
     /// This is (</>) in PPrint (Haskell).
     ///
     pub def besideSoftLine(x: Doc, y: Doc): Doc = match (x, y) {
-        case (Empty, _) => y
-        case (_, Empty) => x
-        case (_, _) => x ++ break() ++ y
+        case (Doc.Empty, _) => y
+        case (_, Doc.Empty) => x
+        case (_, _)         => x ++ break() ++ y
     }
 
 
@@ -286,9 +278,9 @@ mod Text.PrettyPrint {
     /// If one document is empty and one is non-empty, the non-empty doc is printed.
     ///
     pub def besideSoftSpace(x: Doc, y: Doc): Doc = match (x, y) {
-        case (Empty, _) => y
-        case (_, Empty) => x
-        case (_, _) => x ++ char(' ') ++ y
+        case (Doc.Empty, _) => y
+        case (_, Doc.Empty) => x
+        case (_, _)         => x ++ char(' ') ++ y
     }
 
     ///
@@ -317,9 +309,9 @@ mod Text.PrettyPrint {
     /// This is (<$$>) in PPrint (Haskell).
     ///
     pub def <&>(x: Doc, y: Doc): Doc = match (x, y) { 
-        case (Empty, _) => y
-        case (_, Empty) => x
-        case (_, _) => x ++ breakWith(String.lineSeparator()) ++ y
+        case (Doc.Empty, _) => y
+        case (_, Doc.Empty) => x
+        case (_, _)         => x ++ breakWith(String.lineSeparator()) ++ y
     }
 
     /// TODO - to investigate... this is not working as expected inside a `hang`.
@@ -668,8 +660,8 @@ mod Text.PrettyPrint {
     /// Test if document `d` is empty.
     ///
     pub def isEmpty(d: Doc): Bool = match d { 
-        case Empty => true
-        case _     => false
+        case Doc.Empty  => true
+        case _          => false
     }
 
     ///
