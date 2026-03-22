@@ -18,10 +18,14 @@
 mod TestPrettyPrint {
 
     use Assert.{assertEq}
+    use Fs.FileSystem
+    use Fs.FileRead
+    use Fs.FileWrite
+    use Fs.ReadFile
+    use Fs.WriteFile
 
     use FlixPretty.{<&&>, besideSoftLine, besideSoftSpace, parens, text, 
-        empty, hsep, tupled, optionalTupled, removeEmpties, comma, punctuate,
-        writePretty}
+        empty, hsep, tupled, optionalTupled, removeEmpties, comma, punctuate}
 
     /////////////////////////////////////////////////////////////////////////////
     // empty                                                                   //
@@ -185,14 +189,18 @@ mod TestPrettyPrint {
     // writePretty                                                             //
     /////////////////////////////////////////////////////////////////////////////
     @Test
-    pub def writePretty01(): Unit \ { IO, Assert } =
-        let testFile = "test/testfile.txt";
-        let res = run {
-            FileWrite.write(str="XXXXXXXXXXXXXX", testFile);
-            let doc1 = text("hello");
-            discard writePretty(testFile, 120, doc1);
-            FileRead.read(testFile)
-        } with FileWrite.runWithIO
-            with FileRead.runWithIO;
-        assertEq(expected = Ok(Ok("hello")), res)
+    pub def writePretty01(): Unit \ { FileSystem, FileWrite, FileRead, Assert } =
+        let doc1 = text("hello");
+        let result = 
+            run {
+                let path = "output.txt";
+                discard FileWrite.write({ str = "XXXXXXXXXXXXXX" }, path);
+                discard FlixPretty.writePretty(doc1, 120, path);
+                FileRead.read(path)
+            } with FileSystem.withBaseDir("/tmp/flix-pretty-test")
+              with WriteFile.runWithFileWrite
+              with ReadFile.runWithFileRead
+        ;
+        assertEq(expected = Ok("hello"), result)
+
 }

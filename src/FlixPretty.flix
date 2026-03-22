@@ -23,14 +23,9 @@
 pub mod FlixPretty {
 
 
+    use IoError.IoError
+    use Fs.FileWrite
 
-    import java.lang.CharSequence
-    import java.io.IOException
-    import java.nio.charset.Charset
-    import java.nio.file.{Files => JFiles}
-    import java.nio.file.{Path => JPath}
-    import java.nio.file.StandardOpenOption
-    import java.nio.file.{OpenOption => JOpenOption}
 
     /// 
     /// The document datatype.
@@ -178,18 +173,9 @@ pub mod FlixPretty {
     ///
     /// Render `doc` to a file, pretty printed with a line width of `width`.
     ///
-    pub def writePretty(path: String, width: Int32, doc: Doc): Result[String, Bool] \ IO =
-        Result.tryCatch(_ -> {
-            let str = render(width, doc);
-            let path1 = unsafe IO { JPath.of(path) };
-            let cseq: CharSequence = checked_cast(str);
-            let optC = unsafe IO { StandardOpenOption.CREATE };
-            let optT = unsafe IO { StandardOpenOption.TRUNCATE_EXISTING };
-            let optC1: JOpenOption = checked_cast(optC);
-            let optT1: JOpenOption = checked_cast(optT);
-            let _ = JFiles.writeString(path1, cseq, ...{optC1, optT1});
-            true
-        })
+    pub def writePretty(doc: Doc, width: Int32, path: String): Result[IoError, Unit] \ FileWrite =
+        let content = render(width, doc);
+        Fs.FileWrite.write(str = content, path)
 
 
     ///

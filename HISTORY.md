@@ -1,3 +1,6 @@
+### v0.10.1
+   Udated to use Fs `FileWrite` effect for `writePretty`.
+
 ### v0.10.0
    Namespace changes - the topLevel is now `FlixPretty` and the 
    Pretty class is in the child module `FlixPretty.PrettyClass`. 
