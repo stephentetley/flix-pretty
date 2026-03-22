@@ -18,11 +18,11 @@
 mod TestPrettyPrint {
 
     use Assert.{assertEq}
-    use Fs.FileSystem
     use Fs.FileRead
     use Fs.FileWrite
     use Fs.ReadFile
     use Fs.WriteFile
+
 
     use FlixPretty.{<&&>, besideSoftLine, besideSoftSpace, parens, text, 
         empty, hsep, tupled, optionalTupled, removeEmpties, comma, punctuate}
@@ -189,16 +189,18 @@ mod TestPrettyPrint {
     // writePretty                                                             //
     /////////////////////////////////////////////////////////////////////////////
     @Test
-    pub def writePretty01(): Unit \ { FileSystem, FileWrite, FileRead, Assert } =
+    pub def writePretty01(): Unit \ { FileWrite, FileRead, Assert } =
         let doc1 = text("hello");
         let result = 
             run {
-                let path = "output.txt";
-                discard FileWrite.write({ str = "XXXXXXXXXXXXXX" }, path);
-                discard FlixPretty.writePretty(doc1, 120, path);
-                FileRead.read(path)
-            } with FileSystem.withBaseDir("/tmp/flix-pretty-test")
-              with WriteFile.runWithFileWrite
+                forM (
+                    dir  <- FileWrite.mkTempDir("flix-pretty-test");
+                    path <- Ok("${dir}/output.txt");
+                    _    <- FileWrite.write({ str = "XXXXXXXXXXXXXX" }, path);
+                    _    <- FlixPretty.writePretty(doc1, 120, path);
+                    ans  <- FileRead.read(path)
+                ) yield ans
+            } with WriteFile.runWithFileWrite
               with ReadFile.runWithFileRead
         ;
         assertEq(expected = Ok("hello"), result)
