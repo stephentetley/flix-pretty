@@ -1,3 +1,6 @@
+### v0.11.0
+   Changed to use `redef`.
+
 ### v0.10.2
    Updated test `writePretty01` to properly use a temp directory.
 

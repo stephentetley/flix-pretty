@@ -45,76 +45,76 @@ pub mod FlixPretty.PrettyClass {
     def pPrint0(l: PrettyLevel, x: t): Doc with Pretty[t] = Pretty.pPrintPrec(l, 0, x)
 
     instance Pretty[Unit] {
-        pub override def pPrint(_: Unit): Doc = text("()")
+        pub redef pPrint(_: Unit): Doc = text("()")
     }
 
     instance Pretty[Int8] {
-        pub override def pPrint(x: Int8): Doc = FlixPretty.int8(x)
+        pub redef pPrint(x: Int8): Doc = FlixPretty.int8(x)
     }
 
     instance Pretty[Int16] {
-        pub override def pPrint(x: Int16): Doc = FlixPretty.int16(x)
+        pub redef pPrint(x: Int16): Doc = FlixPretty.int16(x)
     }
 
     instance Pretty[Int32] {
-        pub override def pPrint(x: Int32): Doc = FlixPretty.int32(x)
+        pub redef pPrint(x: Int32): Doc = FlixPretty.int32(x)
     }
 
     instance Pretty[Int64] {
-        pub override def pPrint(x: Int64): Doc = FlixPretty.int64(x)
+        pub redef pPrint(x: Int64): Doc = FlixPretty.int64(x)
     }
 
     instance Pretty[BigInt] {
-        pub override def pPrint(x: BigInt): Doc = FlixPretty.bigInt(x)
+        pub redef pPrint(x: BigInt): Doc = FlixPretty.bigInt(x)
     }
 
     instance Pretty[Float32] {
-        pub override def pPrint(x: Float32): Doc = FlixPretty.float32(x)
+        pub redef pPrint(x: Float32): Doc = FlixPretty.float32(x)
     }
 
     instance Pretty[Float64] {
-        pub override def pPrint(x: Float64): Doc = FlixPretty.float64(x)
+        pub redef pPrint(x: Float64): Doc = FlixPretty.float64(x)
     }
 
     instance Pretty[BigDecimal] {
-        pub override def pPrint(x: BigDecimal): Doc = FlixPretty.bigDecimal(x)
+        pub redef pPrint(x: BigDecimal): Doc = FlixPretty.bigDecimal(x)
     }
 
     instance Pretty[Char] {
-        pub override def pPrint(x: Char): Doc = FlixPretty.char(x)
+        pub redef pPrint(x: Char): Doc = FlixPretty.char(x)
     }
 
     instance Pretty[String] {
-        pub override def pPrint(x: String): Doc = text(x)
+        pub redef pPrint(x: String): Doc = text(x)
     }
 
 
     instance Pretty[(a, b)] with Pretty[a], Pretty[b] {
-        pub override def pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b)): Doc = match p {
+        pub redef pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b)): Doc = match p {
             case (x,y) => encloseSep(lparen(), rparen(), text(", "), List#{pPrint0(l, x), pPrint0(l, y)})
         }
     }
 
     instance Pretty[(a, b, c)] with Pretty[a], Pretty[b], Pretty[c] {
-        pub override def pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c)): Doc = match p {
+        pub redef pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c)): Doc = match p {
             case (x,y,z) => encloseSep(lparen(), rparen(), text(", "), List#{pPrint0(l, x), pPrint0(l, y), pPrint0(l, z)})
         }
     }
 
     instance Pretty[(a, b, c, d)] with Pretty[a], Pretty[b], Pretty[c], Pretty[d] {
-        pub override def pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c, d)): Doc = match p {
+        pub redef pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c, d)): Doc = match p {
             case (w,x,y,z) => encloseSep(lparen(), rparen(), text(", "), List#{pPrint0(l, w), pPrint0(l, x), pPrint0(l, y), pPrint0(l, z)})
         }
     }
 
     instance Pretty[(a, b, c, d, e)] with Pretty[a], Pretty[b], Pretty[c], Pretty[d], Pretty[e] {
-        pub override def pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c, d, e)): Doc = match p {
+        pub redef pPrintPrec(l: PrettyLevel, _: Int32, p: (a, b, c, d, e)): Doc = match p {
             case (v,w,x,y,z) => encloseSep(lparen(), rparen(), text(", "), List#{pPrint0(l, v), pPrint0(l, w), pPrint0(l, x), pPrint0(l, y), pPrint0(l, z)})
         }
     }
 
     instance Pretty[Option[a]] with Pretty[a] {
-        pub override def pPrintPrec(l: PrettyLevel, p: Int32, x: Option[a]): Doc = match x {
+        pub redef pPrintPrec(l: PrettyLevel, p: Int32, x: Option[a]): Doc = match x {
             case None     => text("None")
             case Some(x1) => conditionalParens(p > appPrec(), text("Some") <<>> Pretty.pPrintPrec(l, appPrec() + 1, x1))
         }
