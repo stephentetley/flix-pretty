@@ -1,3 +1,6 @@
+### v0.12.0
+   Updated to use new package definition.
+
 ### v0.11.0
    Changed to use `redef`.
 
